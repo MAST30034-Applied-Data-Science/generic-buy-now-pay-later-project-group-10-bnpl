@@ -1,5 +1,4 @@
 #============================================================================================
-import pandas as pd
 from pyspark.sql import SparkSession
 import read_data
 #--------------------------------------------------------------------------------------------
@@ -16,9 +15,26 @@ spark = (
 # COUNTS
 #============================================================================================
 
-# Hi
-
+print("Counts for transactions: ", read_data.transactions.count())
+print("Counts for user_details: ", read_data.user_details.count())
+print("Counts for tbl_merchants: ", read_data.tbl_merchants.count())
+print("Counts for tbl_consumer: ", read_data.tbl_consumer.count())
 
 #============================================================================================
 # SCHEMAS
 #============================================================================================
+
+print("Schema for transactions")
+read_data.transactions.printSchema()
+
+print("Schema for user_details")
+read_data.user_details.printSchema()
+
+print("Schema for tbl_merchants")
+read_data.tbl_merchants.printSchema()
+
+print("Schema for tbl_consumer")
+read_data.tbl_consumer.printSchema()
+
+
+

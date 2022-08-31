@@ -15,7 +15,7 @@ spark = (
 # LOAD IN DATA FROM TABLES DIRECTORY
 #============================================================================================
 # TBL Consumer
-tbl_consumer = pd.read_csv("../data/tables/tbl_consumer.csv", sep='|')
+tbl_consumer = spark.read.option("header", True).csv("../data/tables/tbl_consumer.csv", sep='|')
 
 #--------------------------------------------------------------------------------------------
 # TBL Merchants
