@@ -1,8 +1,9 @@
 #============================================================================================
+import pandas as pd
+from pyspark.sql import SparkSession
 from pyspark.sql import SparkSession
 from pyspark.sql.types import LongType
 from pyspark.sql import functions as F
-import read_data
 #--------------------------------------------------------------------------------------------
 # Create a spark session
 spark = (
@@ -14,11 +15,22 @@ spark = (
     .getOrCreate()
 )
 #============================================================================================
-# Rename Variables
-transactions = read_data.transactions
-tbl_consumer = read_data.tbl_consumer
-user_details = read_data.user_details
-tbl_merchants = read_data.tbl_merchants
+# LOAD IN DATA FROM TABLES DIRECTORY
+#============================================================================================
+# TBL Consumer
+tbl_consumer = spark.read.option("header", True).csv("../data/tables/tbl_consumer.csv", sep='|')
+
+#--------------------------------------------------------------------------------------------
+# TBL Merchants
+tbl_merchants = spark.read.parquet("../data/tables/tbl_merchants.parquet")
+
+#--------------------------------------------------------------------------------------------
+# Consumer User Details
+user_details = spark.read.parquet("../data/tables/consumer_user_details.parquet")
+
+#--------------------------------------------------------------------------------------------
+# Transactions
+transactions = spark.read.parquet('../data/tables/transactions_20210228_20210827_snapshot/')
 
 #============================================================================================
 # PREPROCESSING MERCHANTS DATA
@@ -49,18 +61,14 @@ transactions = transactions.withColumnRenamed("merchant_abn", "trans_merchant_ab
 
 # Join transactions to user details
 trans_user = transactions.join(user_details,transactions.trans_user_id ==  user_details.user_id,"inner")
-print("Count of rows after join 1: ", trans_user.count())
 
 # Join consumer to above data
 add_consumer = tbl_consumer.join(trans_user, tbl_consumer.int_consumer_id ==  trans_user.consumer_id,"inner")
-print("Count of rows after join 2: ", add_consumer.count())
 
-# Join merchant to above data
+# Join merchants to above data
 final_join = tbl_merchants.join(add_consumer, tbl_merchants.merchant_abn == add_consumer.trans_merchant_abn, "full_outer") \
         .drop(F.col("int_consumer_id")) \
         .drop(F.col("trans_user_id"))
-print("Count of rows after join 3: ", final_join.count())
 
 #--------------------------------------------------------------------------------------------
-final_join.printSchema()
 final_join.write.mode('overwrite').parquet("../data/tables/full_join.parquet")
