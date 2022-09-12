@@ -1,5 +1,6 @@
 #============================================================================================
 import pandas as pd
+import geopandas as gpd
 #============================================================================================
 # CLEANING THE SA2 TOTAL POPULATION DATASET
 #============================================================================================
@@ -41,5 +42,32 @@ for val in nulls:
 #--------------------------------------------------------------------------------------------
 # Save the final curated dataset as csv file
 
-population.to_csv("../generic-buy-now-pay-later-project-group-10-bnpl/data/SA2_total_population_cleaned.csv")
+population.to_csv("../generic-buy-now-pay-later-project-group-10-bnpl/data/curated/SA2_total_population.csv")
+
+#============================================================================================
+# CLEANING THE SA2 DISTRICT BOUNDARIES DATASET
+#============================================================================================
+
+# Loading the data
+
+boundaries = gpd.read_file("../generic-buy-now-pay-later-project-group-10-bnpl/data/SA2_boundaries/SA2_2021_AUST_GDA2020.shp")
 #--------------------------------------------------------------------------------------------
+# Checking for null values
+
+nulls = boundaries.isnull().sum()
+flag = 0
+
+for val in nulls:
+
+    # If a null value is found, drop the row
+    if val > 0:
+        boundaries.dropna(inplace=True)
+        flag = 1
+#--------------------------------------------------------------------------------------------
+# Converting the geometrical objects to latitude and longitude for geospatial visualizations
+
+boundaries['geometry'] = boundaries['geometry'].to_crs("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs")
+#--------------------------------------------------------------------------------------------
+# Saving the cleaned dataset
+
+boundaries.to_csv("../generic-buy-now-pay-later-project-group-10-bnpl/data/curated/SA2_district_boundaries.csv")
