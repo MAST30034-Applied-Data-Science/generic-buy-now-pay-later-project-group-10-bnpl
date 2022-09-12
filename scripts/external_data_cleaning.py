@@ -71,3 +71,4 @@ boundaries['geometry'] = boundaries['geometry'].to_crs("+proj=longlat +ellps=WGS
 # Saving the cleaned dataset
 
 boundaries.to_csv("../generic-buy-now-pay-later-project-group-10-bnpl/data/curated/SA2_district_boundaries.csv")
+#--------------------------------------------------------------------------------------------
