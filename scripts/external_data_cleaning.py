@@ -41,5 +41,5 @@ for val in nulls:
 #--------------------------------------------------------------------------------------------
 # Save the final curated dataset as csv file
 
-population.to_csv("../generic-buy-now-pay-later-project-group-10-bnpl/data/curated/SA2_total_population.csv")
+population.to_csv("../generic-buy-now-pay-later-project-group-10-bnpl/data/SA2_total_population_cleaned.csv")
 #--------------------------------------------------------------------------------------------
