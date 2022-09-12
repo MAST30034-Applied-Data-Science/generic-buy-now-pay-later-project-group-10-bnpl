@@ -1,6 +1,7 @@
 #============================================================================================
 import pandas as pd
 import geopandas as gpd
+
 #============================================================================================
 # CLEANING THE SA2 TOTAL POPULATION DATASET
 #============================================================================================
@@ -92,3 +93,18 @@ income.dropna(inplace=True)
 
 income.to_csv("../generic-buy-now-pay-later-project-group-10-bnpl/data/curated/SA2_income.csv")
         
+#============================================================================================
+# CLEANING THE SA2 INCOME DATASET
+#============================================================================================
+# Read the csv file
+census = pd.read_csv("../generic-buy-now-pay-later-project-group-10-bnpl/data/SA2_census/2021 Census GCP Statistical Area 2 for AUS/2021Census_G01_AUST_SA2.csv")
+
+#--------------------------------------------------------------------------------------------
+# Drop the null values
+census.dropna()
+
+#--------------------------------------------------------------------------------------------
+# Save as a csv file
+census.to_csv("../generic-buy-now-pay-later-project-group-10-bnpl/data/curated/SA2_census.csv")
+
+#--------------------------------------------------------------------------------------------
