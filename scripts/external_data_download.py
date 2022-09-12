@@ -17,7 +17,7 @@ urlretrieve(url, output_csv)
 #============================================================================================
 # Code adapted from MAST30034 Tutorial 1
 # from the current `tute_1` directory, go back two levels to the `MAST30034` directory
-output_relative_dir = '../data/'
+output_relative_dir = '../generic-buy-now-pay-later-project-group-10-bnpl/data/'
 
 # check if it exists as it makedir will raise an error if it does exist
 if not os.path.exists(output_relative_dir):
