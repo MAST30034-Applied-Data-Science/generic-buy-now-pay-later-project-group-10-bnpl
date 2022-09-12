@@ -54,3 +54,14 @@ with ZipFile(file_name, 'r') as zip:
     zip.extractall(path = "../generic-buy-now-pay-later-project-group-10-bnpl/data/SA2_boundaries/")
 
 #--------------------------------------------------------------------------------------------
+# Download the SA2 boundaries dataset
+
+SA2_URL_pop = "https://www.abs.gov.au/statistics/people/population/regional-population/2021/32180DS0001_2001-21.xlsx"
+
+# Define the file names
+output = "../generic-buy-now-pay-later-project-group-10-bnpl/data/SA2_total_population/SA2_pop.xlsx"
+
+# Download the data
+urlretrieve(SA2_URL_pop, output)
+
+
