@@ -102,7 +102,7 @@ SA2_CENSUS_URL = "https://www.abs.gov.au/census/find-census-data/datapacks/downl
 
 #--------------------------------------------------------------------------------------------
 # Define the file name
-output_csv = "../data/SA2_census/census.zip"
+output_csv = "../generic-buy-now-pay-later-project-group-10-bnpl/data/SA2_census/census.zip"
 
 #--------------------------------------------------------------------------------------------
 # Download the data
@@ -112,5 +112,5 @@ urlretrieve(SA2_CENSUS_URL, output_csv)
 # Opening the zip file in read mode
 with ZipFile(output_csv, 'r') as zip:
     # extracting all the files
-    zip.extractall(path = "../data/SA2_census/")
+    zip.extractall(path = "../generic-buy-now-pay-later-project-group-10-bnpl/data/SA2_census/")
     #--------------------------------------------------------------------------------------------
