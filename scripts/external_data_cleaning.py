@@ -30,15 +30,7 @@ population.drop([2466, 2468], inplace=True)
 #--------------------------------------------------------------------------------------------
 # Checking for null values
 
-nulls = population.isnull().sum()
-flag = 0
-
-for val in nulls:
-
-    # If a null value is found, drop the row
-    if val > 0:
-        population.dropna(inplace=True)
-        flag = 1
+population.dropna(inplace=True)
 #--------------------------------------------------------------------------------------------
 # Save the final curated dataset as csv file
 
@@ -49,20 +41,12 @@ population.to_csv("../generic-buy-now-pay-later-project-group-10-bnpl/data/curat
 #============================================================================================
 
 # Loading the data
-
 boundaries = gpd.read_file("../generic-buy-now-pay-later-project-group-10-bnpl/data/SA2_boundaries/SA2_2021_AUST_GDA2020.shp")
 #--------------------------------------------------------------------------------------------
 # Checking for null values
 
-nulls = boundaries.isnull().sum()
-flag = 0
+boundaries.dropna(inplace=True)
 
-for val in nulls:
-
-    # If a null value is found, drop the row
-    if val > 0:
-        boundaries.dropna(inplace=True)
-        flag = 1
 #--------------------------------------------------------------------------------------------
 # Converting the geometrical objects to latitude and longitude for geospatial visualizations
 
@@ -71,4 +55,40 @@ boundaries['geometry'] = boundaries['geometry'].to_crs("+proj=longlat +ellps=WGS
 # Saving the cleaned dataset
 
 boundaries.to_csv("../generic-buy-now-pay-later-project-group-10-bnpl/data/curated/SA2_district_boundaries.csv")
+
+#============================================================================================
+# CLEANING THE SA2 INCOME DATASET
+#============================================================================================
+
+# Loading the data
+income = pd.read_excel("../generic-buy-now-pay-later-project-group-10-bnpl/data/SA2_income/SA2_income.xlsx", sheet_name="Table 1.4")
+
 #--------------------------------------------------------------------------------------------
+# Select the necessary columns
+
+income = income.iloc[6:,[0,1,12,13,14,15,16]]
+#--------------------------------------------------------------------------------------------
+# Define the new column names for better readability
+cols_income = ['SA2', "SA2_name", "2014-2015", "2015-2016", "2016-2017", "2017-2018", "2018-2019"]
+
+#--------------------------------------------------------------------------------------------
+# Set the new column names to the dataframe
+income.columns = cols_income
+
+#--------------------------------------------------------------------------------------------
+# Remove the unwanted values i.e. values that are of type string in the numeric columns 
+
+for index, rows in income.iteritems():
+    if index != 'SA2_name':
+        for value in rows.values:
+            if type(value) == str: 
+                income = income[income[index] != value]
+#--------------------------------------------------------------------------------------------
+# Checking for null values
+
+income.dropna(inplace=True)
+#--------------------------------------------------------------------------------------------
+# Saving the cleaned dataset
+
+income.to_csv("../generic-buy-now-pay-later-project-group-10-bnpl/data/curated/SA2_income.csv")
+        
