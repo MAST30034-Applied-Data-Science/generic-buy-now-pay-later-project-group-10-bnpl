@@ -107,4 +107,20 @@ census.dropna()
 # Save as a csv file
 census.to_csv("../data/curated/SA2_census.csv")
 
+#============================================================================================
+# CLEANING THE COVID-19 dataset
+#============================================================================================
+# Read the data
+covid = pd.read_csv("../data/covid.csv")
+
+#--------------------------------------------------------------------------------------------
+# Extract the year, month and date from the timestamp
+covid['yyyy'] = pd.to_datetime(covid['date']).dt.year
+covid['mm'] = pd.to_datetime(covid['date']).dt.month
+covid['dd'] = pd.to_datetime(covid['date']).dt.day
+
+#--------------------------------------------------------------------------------------------
+# Save the cleaned data to the curated folder
+covid.to_csv("../data/curated/covid.csv")
+
 #--------------------------------------------------------------------------------------------
