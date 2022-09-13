@@ -7,7 +7,7 @@ import geopandas as gpd
 #============================================================================================
 # Read the SA2 total population by districts dataset
 
-population = pd.read_excel("../generic-buy-now-pay-later-project-group-10-bnpl/data/SA2_total_population/SA2_pop.xlsx",sheet_name="Table 1")
+population = pd.read_excel("../data/SA2_total_population/SA2_pop.xlsx",sheet_name="Table 1")
 #--------------------------------------------------------------------------------------------
 # Select the relevant rows to filter out uneccessary data
 
@@ -35,14 +35,14 @@ population.dropna(inplace=True)
 #--------------------------------------------------------------------------------------------
 # Save the final curated dataset as csv file
 
-population.to_csv("../generic-buy-now-pay-later-project-group-10-bnpl/data/curated/SA2_total_population.csv")
+population.to_csv("../data/curated/SA2_total_population.csv")
 
 #============================================================================================
 # CLEANING THE SA2 DISTRICT BOUNDARIES DATASET
 #============================================================================================
 
 # Loading the data
-boundaries = gpd.read_file("../generic-buy-now-pay-later-project-group-10-bnpl/data/SA2_boundaries/SA2_2021_AUST_GDA2020.shp")
+boundaries = gpd.read_file("../data/SA2_boundaries/SA2_2021_AUST_GDA2020.shp")
 #--------------------------------------------------------------------------------------------
 # Checking for null values
 
@@ -55,14 +55,14 @@ boundaries['geometry'] = boundaries['geometry'].to_crs("+proj=longlat +ellps=WGS
 #--------------------------------------------------------------------------------------------
 # Saving the cleaned dataset
 
-boundaries.to_csv("../generic-buy-now-pay-later-project-group-10-bnpl/data/curated/SA2_district_boundaries.csv")
+boundaries.to_csv("../data/curated/SA2_district_boundaries.csv")
 
 #============================================================================================
 # CLEANING THE SA2 INCOME DATASET
 #============================================================================================
 
 # Loading the data
-income = pd.read_excel("../generic-buy-now-pay-later-project-group-10-bnpl/data/SA2_income/SA2_income.xlsx", sheet_name="Table 1.4")
+income = pd.read_excel("../data/SA2_income/SA2_income.xlsx", sheet_name="Table 1.4")
 
 #--------------------------------------------------------------------------------------------
 # Select the necessary columns
@@ -91,13 +91,13 @@ income.dropna(inplace=True)
 #--------------------------------------------------------------------------------------------
 # Saving the cleaned dataset
 
-income.to_csv("../generic-buy-now-pay-later-project-group-10-bnpl/data/curated/SA2_income.csv")
+income.to_csv("../data/curated/SA2_income.csv")
         
 #============================================================================================
 # CLEANING THE SA2 INCOME DATASET
 #============================================================================================
 # Read the csv file
-census = pd.read_csv("../generic-buy-now-pay-later-project-group-10-bnpl/data/SA2_census/2021 Census GCP Statistical Area 2 for AUS/2021Census_G01_AUST_SA2.csv")
+census = pd.read_csv("../data/SA2_census/2021 Census GCP Statistical Area 2 for AUS/2021Census_G01_AUST_SA2.csv")
 
 #--------------------------------------------------------------------------------------------
 # Drop the null values
@@ -105,6 +105,6 @@ census.dropna()
 
 #--------------------------------------------------------------------------------------------
 # Save as a csv file
-census.to_csv("../generic-buy-now-pay-later-project-group-10-bnpl/data/curated/SA2_census.csv")
+census.to_csv("../data/curated/SA2_census.csv")
 
 #--------------------------------------------------------------------------------------------

@@ -12,7 +12,7 @@ url = "https://raw.githubusercontent.com/M3IT/COVID-19_Data/master/Data/COVID_AU
 
 #--------------------------------------------------------------------------------------------
 # Define the file names
-output_csv = "../generic-buy-now-pay-later-project-group-10-bnpl/data/covid.csv"
+output_csv = "../data/covid.csv"
 
 #--------------------------------------------------------------------------------------------
 # Download the data
@@ -23,7 +23,7 @@ urlretrieve(url, output_csv)
 #============================================================================================
 # Code adapted from MAST30034 Tutorial 1
 # from the current `tute_1` directory, go back two levels to the `MAST30034` directory
-output_relative_dir = '../generic-buy-now-pay-later-project-group-10-bnpl/data/'
+output_relative_dir = '../data/'
 
 #--------------------------------------------------------------------------------------------
 # check if it exists as it makedir will raise an error if it does exist
@@ -49,7 +49,7 @@ SA2_URL_ZIP = "https://www.abs.gov.au/statistics/standards/australian-statistica
 
 #--------------------------------------------------------------------------------------------
 # Define the file names
-output_zip = "../generic-buy-now-pay-later-project-group-10-bnpl/data/SA2_boundaries/SA2.zip"
+output_zip = "../data/SA2_boundaries/SA2.zip"
 
 #--------------------------------------------------------------------------------------------
 # Download the data
@@ -58,13 +58,13 @@ urlretrieve(SA2_URL_ZIP, output_zip)
 #--------------------------------------------------------------------------------------------
 # Extracting the zip file of the geospatial data
 # Specifythe zip file name
-file_name = "../generic-buy-now-pay-later-project-group-10-bnpl/data/SA2_boundaries/SA2.zip"
+file_name = "../data/SA2_boundaries/SA2.zip"
   
 #--------------------------------------------------------------------------------------------
 # opening the zip file in READ mode
 with ZipFile(file_name, 'r') as zip:
     # extracting all the files
-    zip.extractall(path = "../generic-buy-now-pay-later-project-group-10-bnpl/data/SA2_boundaries/")
+    zip.extractall(path = "../data/SA2_boundaries/")
 
 #============================================================================================
 # SA2 TOTAL POPULATION DATASET DOWNLOAD
@@ -74,7 +74,7 @@ SA2_URL_POP = "https://www.abs.gov.au/statistics/people/population/regional-popu
 
 #--------------------------------------------------------------------------------------------
 # Define the file names
-output = "../generic-buy-now-pay-later-project-group-10-bnpl/data/SA2_total_population/SA2_pop.xlsx"
+output = "../data/SA2_total_population/SA2_pop.xlsx"
 
 #--------------------------------------------------------------------------------------------
 # Download the data
@@ -88,7 +88,7 @@ SA2_URL_INCOME = "https://www.abs.gov.au/statistics/labour/earnings-and-working-
 
 #--------------------------------------------------------------------------------------------
 # Define the file names
-output = "../generic-buy-now-pay-later-project-group-10-bnpl/data/SA2_income/SA2_income.xlsx"
+output = "../data/SA2_income/SA2_income.xlsx"
 
 #--------------------------------------------------------------------------------------------
 # Download the data
@@ -102,7 +102,7 @@ SA2_CENSUS_URL = "https://www.abs.gov.au/census/find-census-data/datapacks/downl
 
 #--------------------------------------------------------------------------------------------
 # Define the file name
-output_csv = "../generic-buy-now-pay-later-project-group-10-bnpl/data/SA2_census/census.zip"
+output_csv = "../data/SA2_census/census.zip"
 
 #--------------------------------------------------------------------------------------------
 # Download the data
@@ -112,5 +112,5 @@ urlretrieve(SA2_CENSUS_URL, output_csv)
 # Opening the zip file in read mode
 with ZipFile(output_csv, 'r') as zip:
     # extracting all the files
-    zip.extractall(path = "../generic-buy-now-pay-later-project-group-10-bnpl/data/SA2_census/")
+    zip.extractall(path = "../data/SA2_census/")
     #--------------------------------------------------------------------------------------------
