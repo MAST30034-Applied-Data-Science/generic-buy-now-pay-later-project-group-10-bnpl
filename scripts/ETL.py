@@ -43,16 +43,8 @@ user_details = spark.read.parquet(raw_path + 'consumer_user_details.parquet')
 # Transactions
 transactions1 = spark.read.parquet(raw_path + 'transactions_20210228_20210827_snapshot/')
 transactions2 = spark.read.parquet(raw_path + 'transactions_20210828_20220227_snapshot/')
-transactions3 = spark.read.parquet(raw_path + 'transactions_20220228_20220828_snapshot/')
-transactions12 = transactions1.union(transactions2).distinct()
-transactions = transactions12.union(transactions3).distinct()
+transactions = transactions1.union(transactions2).distinct()
 
-#--------------------------------------------------------------------------------------------
-# Fraud Details
-fraud_consumer = spark.read.option("header", True).csv(raw_path +'consumer_fraud_probability.csv')
-fraud_merchants = spark.read.option("header", True).csv(raw_path +'merchant_fraud_probability.csv')
-
-#--------------------------------------------------------------------------------------------
 #============================================================================================
 # Extract time periods (years) from transactions dataset
 

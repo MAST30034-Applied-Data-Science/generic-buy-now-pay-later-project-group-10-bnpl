@@ -113,4 +113,4 @@ urlretrieve(SA2_CENSUS_URL, output_csv)
 with ZipFile(output_csv, 'r') as zip:
     # extracting all the files
     zip.extractall(path = "../data/SA2_census/")
-#--------------------------------------------------------------------------------------------
+    #--------------------------------------------------------------------------------------------
