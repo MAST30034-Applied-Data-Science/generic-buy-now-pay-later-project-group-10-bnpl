@@ -36,5 +36,7 @@ read_data.tbl_merchants.printSchema()
 print("Schema for tbl_consumer")
 read_data.tbl_consumer.printSchema()
 
+#--------------------------------------------------------------------------------------------
+
 
 

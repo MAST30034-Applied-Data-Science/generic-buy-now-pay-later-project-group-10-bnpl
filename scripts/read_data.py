@@ -30,3 +30,5 @@ user_details = spark.read.parquet("../data/tables/consumer_user_details.parquet"
 transactions = spark.read.parquet('../data/tables/transactions_20210228_20210827_snapshot/')
 
 #--------------------------------------------------------------------------------------------
+
+#git commit 
