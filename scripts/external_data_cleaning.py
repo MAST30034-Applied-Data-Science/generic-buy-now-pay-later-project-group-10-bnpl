@@ -14,18 +14,24 @@ population = pd.read_excel("../data/SA2_total_population/SA2_pop.xlsx",sheet_nam
 population = population.iloc[8:,:31]
 #--------------------------------------------------------------------------------------------
 # Define the new column names for better readability
-cols = ['S/T_code', 'S/T_name', 'GCCSA_code', 'GCCSA_name', 'SA4_code', 'SA4_name',
+cols = ['state_code', 'state_name', 'GCCSA_code', 'GCCSA_name', 'SA4_code', 'SA4_name',
 'SA3_code', 'SA3_name', 'SA2_code','SA2_name', '2001', '2002', '2003','2004','2005','2006',
 '2007','2008','2009','2010','2011','2012','2013','2014','2015','2016','2017','2018','2019',
 '2020','2021']	
-#----------------
+
 # ----------------------------------------------------------------------------
 # Set the new column names to the dataframe
 population.columns = cols
 
+# ----------------------------------------------------------------------------
+# Select the required columns
+population = population[['SA2_code', 'SA2_name','state_code', 'state_name','2001', 
+'2002', '2003','2004','2005','2006','2007','2008','2009','2010','2011','2012',
+'2013','2014','2015','2016','2017','2018','2019','2020','2021']]
+
 #--------------------------------------------------------------------------------------------
 # Filter out the unwanted rows
-population.dropna(subset=['S/T_code'], inplace=True)
+population.dropna(subset=['state_code'], inplace=True)
 population.drop([2466, 2468], inplace=True)
 
 #--------------------------------------------------------------------------------------------
