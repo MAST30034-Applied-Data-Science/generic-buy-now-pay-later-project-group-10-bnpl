@@ -134,6 +134,17 @@ census.to_csv("../data/curated/SA2_census.csv")
 covid = pd.read_csv("../data/covid.csv")
 
 #--------------------------------------------------------------------------------------------
+# Selecting the required columns
+cols = ['date', 'state', 'confirmed']
+covid = covid[cols]
+
+#--------------------------------------------------------------------------------------------
+# Renaming the columns
+
+new_cols = ['date', 'state_name', 'covid_cases']
+covid.columns = new_cols
+
+#--------------------------------------------------------------------------------------------
 # Extract the year, month and date from the timestamp
 covid['yyyy'] = pd.to_datetime(covid['date']).dt.year
 covid['mm'] = pd.to_datetime(covid['date']).dt.month
