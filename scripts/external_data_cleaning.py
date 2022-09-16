@@ -76,7 +76,7 @@ income = pd.read_excel("../data/SA2_income/SA2_income.xlsx", sheet_name="Table 1
 income = income.iloc[6:,[0,1,12,13,14,15,16]]
 #--------------------------------------------------------------------------------------------
 # Define the new column names for better readability
-cols_income = ['SA2', "SA2_name", "2014-2015", "2015-2016", "2016-2017", "2017-2018", "2018-2019"]
+cols_income = ['SA2_code', "SA2_name", "2014-2015", "2015-2016", "2016-2017", "2017-2018", "2018-2019"]
 
 #--------------------------------------------------------------------------------------------
 # Set the new column names to the dataframe
