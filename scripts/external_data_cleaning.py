@@ -94,7 +94,7 @@ income.dropna(inplace=True)
 income.to_csv("../data/curated/SA2_income.csv")
         
 #============================================================================================
-# CLEANING THE SA2 INCOME DATASET
+# CLEANING THE SA2 CENSUS DATASET
 #============================================================================================
 # Read the csv file
 census = pd.read_csv("../data/SA2_census/2021 Census GCP Statistical Area 2 for AUS/2021Census_G01_AUST_SA2.csv")
@@ -102,7 +102,13 @@ census = pd.read_csv("../data/SA2_census/2021 Census GCP Statistical Area 2 for 
 #--------------------------------------------------------------------------------------------
 # Drop the null values
 census.dropna()
+#--------------------------------------------------------------------------------------------
 
+census = census[['SA2_CODE_2021', 'Tot_P_M', 'Tot_P_F', 'Tot_P_P']]
+#--------------------------------------------------------------------------------------------
+# Renaming the columns
+new_cols = ['SA2_code', 'total_males', 'total_females', 'total_persons']
+census.columns = new_cols
 #--------------------------------------------------------------------------------------------
 # Save as a csv file
 census.to_csv("../data/curated/SA2_census.csv")
