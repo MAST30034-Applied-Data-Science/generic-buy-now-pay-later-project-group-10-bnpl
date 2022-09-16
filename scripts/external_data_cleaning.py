@@ -17,7 +17,7 @@ population = population.iloc[8:,:31]
 cols = ['state_code', 'state_name', 'GCCSA_code', 'GCCSA_name', 'SA4_code', 'SA4_name',
 'SA3_code', 'SA3_name', 'SA2_code','SA2_name', '2001', '2002', '2003','2004','2005','2006',
 '2007','2008','2009','2010','2011','2012','2013','2014','2015','2016','2017','2018','2019',
-'2020','2021']	
+'population_2020','population_2021']	
 
 # ----------------------------------------------------------------------------
 # Set the new column names to the dataframe
@@ -25,9 +25,7 @@ population.columns = cols
 
 # ----------------------------------------------------------------------------
 # Select the required columns
-population = population[['SA2_code', 'SA2_name','state_code', 'state_name','2001', 
-'2002', '2003','2004','2005','2006','2007','2008','2009','2010','2011','2012',
-'2013','2014','2015','2016','2017','2018','2019','2020','2021']]
+population = population[['SA2_code', 'SA2_name','state_code', 'state_name','population_2020','population_2021']]
 
 #--------------------------------------------------------------------------------------------
 # Filter out the unwanted rows
@@ -82,11 +80,16 @@ income = pd.read_excel("../data/SA2_income/SA2_income.xlsx", sheet_name="Table 1
 income = income.iloc[6:,[0,1,12,13,14,15,16]]
 #--------------------------------------------------------------------------------------------
 # Define the new column names for better readability
-cols_income = ['SA2_code', "SA2_name", "2014-2015", "2015-2016", "2016-2017", "2017-2018", "2018-2019"]
+cols_income = ['SA2_code', "SA2_name", "2014-2015", "2015-2016", "2016-2017", "2017-2018",
+ "income_2018-2019"]
 
 #--------------------------------------------------------------------------------------------
 # Set the new column names to the dataframe
 income.columns = cols_income
+
+#--------------------------------------------------------------------------------------------
+# Selecting the required columns
+income = income[['SA2_code', "SA2_name", "income_2018-2019"]]
 
 #--------------------------------------------------------------------------------------------
 # Remove the unwanted values i.e. values that are of type string in the numeric columns 
