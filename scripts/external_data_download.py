@@ -95,7 +95,7 @@ output = "../data/SA2_income/SA2_income.xlsx"
 urlretrieve(SA2_URL_INCOME, output)
 
 #============================================================================================
-# SA2 INCOME DATA DOWNLOAD
+# SA2 CENSUS DATA DOWNLOAD
 #============================================================================================
 # Specify the url
 SA2_CENSUS_URL = "https://www.abs.gov.au/census/find-census-data/datapacks/download/2021_GCP_SA2_for_AUS_short-header.zip"

@@ -14,27 +14,30 @@ population = pd.read_excel("../data/SA2_total_population/SA2_pop.xlsx",sheet_nam
 population = population.iloc[8:,:31]
 #--------------------------------------------------------------------------------------------
 # Define the new column names for better readability
-
-cols = ['S/T_code', 'S/T_name', 'GCCSA_code', 'GCCSA_name', 'SA4_code', 'SA4_name',
+cols = ['state_code', 'state_name', 'GCCSA_code', 'GCCSA_name', 'SA4_code', 'SA4_name',
 'SA3_code', 'SA3_name', 'SA2_code','SA2_name', '2001', '2002', '2003','2004','2005','2006',
 '2007','2008','2009','2010','2011','2012','2013','2014','2015','2016','2017','2018','2019',
-'2020','2021']	
-#--------------------------------------------------------------------------------------------
-# Set the new column names to the dataframe
+'population_2020','population_2021']	
 
+# ----------------------------------------------------------------------------
+# Set the new column names to the dataframe
 population.columns = cols
+
+# ----------------------------------------------------------------------------
+# Select the required columns
+population = population[['SA2_code', 'SA2_name','state_code', 'state_name','population_2020','population_2021']]
+
 #--------------------------------------------------------------------------------------------
 # Filter out the unwanted rows
-
-population.dropna(subset=['S/T_code'], inplace=True)
+population.dropna(subset=['state_code'], inplace=True)
 population.drop([2466, 2468], inplace=True)
+
 #--------------------------------------------------------------------------------------------
 # Checking for null values
-
 population.dropna(inplace=True)
+
 #--------------------------------------------------------------------------------------------
 # Save the final curated dataset as csv file
-
 population.to_csv("../data/curated/SA2_total_population.csv")
 
 #============================================================================================
@@ -45,16 +48,23 @@ population.to_csv("../data/curated/SA2_total_population.csv")
 boundaries = gpd.read_file("../data/SA2_boundaries/SA2_2021_AUST_GDA2020.shp")
 #--------------------------------------------------------------------------------------------
 # Checking for null values
-
 boundaries.dropna(inplace=True)
 
 #--------------------------------------------------------------------------------------------
 # Converting the geometrical objects to latitude and longitude for geospatial visualizations
-
 boundaries['geometry'] = boundaries['geometry'].to_crs("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs")
+
+#--------------------------------------------------------------------------------------------
+# Selecting the required columns
+boundaries = boundaries[['SA2_CODE21', 'SA2_NAME21', 'STE_CODE21', 'STE_NAME21', 'geometry']]
+
+#--------------------------------------------------------------------------------------------
+# Renaming the columns
+new_columns = ['SA2_code', 'SA2_name', 'state_code', 'state_name', 'geometry']
+boundaries.columns = new_columns
+
 #--------------------------------------------------------------------------------------------
 # Saving the cleaned dataset
-
 boundaries.to_csv("../data/curated/SA2_district_boundaries.csv")
 
 #============================================================================================
@@ -70,11 +80,16 @@ income = pd.read_excel("../data/SA2_income/SA2_income.xlsx", sheet_name="Table 1
 income = income.iloc[6:,[0,1,12,13,14,15,16]]
 #--------------------------------------------------------------------------------------------
 # Define the new column names for better readability
-cols_income = ['SA2', "SA2_name", "2014-2015", "2015-2016", "2016-2017", "2017-2018", "2018-2019"]
+cols_income = ['SA2_code', "SA2_name", "2014-2015", "2015-2016", "2016-2017", "2017-2018",
+ "income_2018-2019"]
 
 #--------------------------------------------------------------------------------------------
 # Set the new column names to the dataframe
 income.columns = cols_income
+
+#--------------------------------------------------------------------------------------------
+# Selecting the required columns
+income = income[['SA2_code', "SA2_name", "income_2018-2019"]]
 
 #--------------------------------------------------------------------------------------------
 # Remove the unwanted values i.e. values that are of type string in the numeric columns 
@@ -94,7 +109,7 @@ income.dropna(inplace=True)
 income.to_csv("../data/curated/SA2_income.csv")
         
 #============================================================================================
-# CLEANING THE SA2 INCOME DATASET
+# CLEANING THE SA2 CENSUS DATASET
 #============================================================================================
 # Read the csv file
 census = pd.read_csv("../data/SA2_census/2021 Census GCP Statistical Area 2 for AUS/2021Census_G01_AUST_SA2.csv")
@@ -102,6 +117,14 @@ census = pd.read_csv("../data/SA2_census/2021 Census GCP Statistical Area 2 for 
 #--------------------------------------------------------------------------------------------
 # Drop the null values
 census.dropna()
+#--------------------------------------------------------------------------------------------
+# Selecting the required columns
+census = census[['SA2_CODE_2021', 'Tot_P_M', 'Tot_P_F', 'Tot_P_P']]
+
+#--------------------------------------------------------------------------------------------
+# Renaming the columns
+new_cols = ['SA2_code', 'total_males', 'total_females', 'total_persons']
+census.columns = new_cols
 
 #--------------------------------------------------------------------------------------------
 # Save as a csv file
@@ -112,6 +135,17 @@ census.to_csv("../data/curated/SA2_census.csv")
 #============================================================================================
 # Read the data
 covid = pd.read_csv("../data/covid.csv")
+
+#--------------------------------------------------------------------------------------------
+# Selecting the required columns
+cols = ['date', 'state', 'confirmed']
+covid = covid[cols]
+
+#--------------------------------------------------------------------------------------------
+# Renaming the columns
+
+new_cols = ['date', 'state_name', 'covid_cases']
+covid.columns = new_cols
 
 #--------------------------------------------------------------------------------------------
 # Extract the year, month and date from the timestamp
