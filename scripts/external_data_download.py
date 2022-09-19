@@ -113,4 +113,16 @@ urlretrieve(SA2_CENSUS_URL, output_csv)
 with ZipFile(output_csv, 'r') as zip:
     # extracting all the files
     zip.extractall(path = "../data/SA2_census/")
-    #--------------------------------------------------------------------------------------------
+#============================================================================================
+# SA2 TO POSTCODE DATA DOWNLOAD
+#============================================================================================
+# Specify the url
+SA2_POSTCODE_URL = "https://raw.githubusercontent.com/matthewproctor/australianpostcodes/master/australian_postcodes.csv"
+
+#--------------------------------------------------------------------------------------------
+# Define the file names
+output_csv = "../data/postcode.csv"
+
+#--------------------------------------------------------------------------------------------
+# Download the data
+urlretrieve(SA2_POSTCODE_URL, output_csv) 
