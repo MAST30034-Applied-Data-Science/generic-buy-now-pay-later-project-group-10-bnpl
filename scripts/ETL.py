@@ -3,6 +3,7 @@ import pandas as pd
 from pyspark.sql import SparkSession
 from pyspark.sql import SparkSession
 from pyspark.sql.types import LongType
+from pyspark.sql.types import IntegerType
 from pyspark.sql import functions as F
 from pyspark.sql.functions import *
 import json
@@ -26,6 +27,7 @@ with open("../scripts/paths.json") as json_paths:
     json_paths.close()
 
 raw_path = PATHS['raw_path']
+curated_path = PATHS['curated_path']
 #--------------------------------------------------------------------------------------------
     
 # TBL Consumer
@@ -43,7 +45,14 @@ user_details = spark.read.parquet(raw_path + 'consumer_user_details.parquet')
 # Transactions
 transactions1 = spark.read.parquet(raw_path + 'transactions_20210228_20210827_snapshot/')
 transactions2 = spark.read.parquet(raw_path + 'transactions_20210828_20220227_snapshot/')
-transactions = transactions1.union(transactions2).distinct()
+transactions3 = spark.read.parquet(raw_path + 'transactions_20220228_20220828_snapshot/')
+transactions12 = transactions1.union(transactions2).distinct()
+transactions = transactions12.union(transactions3).distinct()
+
+#--------------------------------------------------------------------------------------------
+# Fraud Details
+fraud_consumer = spark.read.option("header", True).csv(raw_path +'consumer_fraud_probability.csv')
+fraud_merchants = spark.read.option("header", True).csv(raw_path +'merchant_fraud_probability.csv')
 
 #============================================================================================
 # Extract time periods (years) from transactions dataset
@@ -100,6 +109,19 @@ final_join = tbl_merchants.join(add_consumer, tbl_merchants.merchant_abn == add_
         .drop(F.col("int_consumer_id")) \
         .drop(F.col("trans_user_id"))
 
-#--------------------------------------------------------------------------------------------
-final_join.write.mode('overwrite').parquet("../data/tables/full_join.parquet")
+#============================================================================================
+# Adding postcode stuff in 
+#============================================================================================
+postcode = spark.read.option("header", True).csv(curated_path +'postcode.csv')
+postcode = postcode.drop(F.col("_c0"))
+postcode_nonull = postcode.na.drop()
+distinct = postcode_nonull.dropDuplicates(["postcodes"])
+
+final_join2 = final_join.join(distinct, final_join.postcode == distinct.postcodes, "inner") \
+        .drop(F.col("postcodes"))
+
+final_join2 = final_join2.withColumn("int_SA2", final_join2["SA2"].cast(IntegerType())).drop(F.col("SA2"))
+
+#============================================================================================
+final_join2.write.mode('overwrite').parquet("../data/tables/full_join.parquet")
 
