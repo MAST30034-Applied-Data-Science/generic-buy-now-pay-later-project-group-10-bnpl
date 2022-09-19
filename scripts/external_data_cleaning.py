@@ -157,4 +157,25 @@ covid['dd'] = pd.to_datetime(covid['date']).dt.day
 # Save the cleaned data to the curated folder
 covid.to_csv("../data/curated/covid.csv")
 
+#============================================================================================
+# CLEANING THE POSTCODE dataset
+#============================================================================================
+# Read the data
+postcode = pd.read_csv("../data/postcode.csv")
+
+#--------------------------------------------------------------------------------------------
+# Selecting the required columns
+cols = ['postcode', 'SA2_MAINCODE_2016']
+postcode = postcode[cols]
+
+#--------------------------------------------------------------------------------------------
+# Renaming the columns
+
+new_cols = ['postcodes', 'SA2']
+postcode.columns = new_cols
+
+#--------------------------------------------------------------------------------------------
+# Save the cleaned data to the curated folder
+postcode.to_csv("../data/curated/postcode.csv")
+
 #--------------------------------------------------------------------------------------------
