@@ -205,6 +205,20 @@ output_csv = external_data_path + "postcode.csv"
 urlretrieve(SA2_POSTCODE_URL, output_csv) 
 
 #============================================================================================
+# SA2 TO POSTCODE (for visualisations) DATA DOWNLOAD
+#============================================================================================
+# Specify the url
+SA2_POSTCODE_URL = "https://raw.githubusercontent.com/schappim/australian-postcodes/master/australian-postcodes.csv"
+
+#--------------------------------------------------------------------------------------------
+# Define the file names
+output_csv = external_data_path + "visualisations_postcodes.csv"
+
+#--------------------------------------------------------------------------------------------
+# Download the data
+urlretrieve(SA2_POSTCODE_URL, output_csv) 
+
+#============================================================================================
 # TRANSFORM
 #============================================================================================
 # PREPROCESSING MERCHANTS DATA
