@@ -423,14 +423,14 @@ final_join2 = final_join2.withColumn("int_sa2", final_join2["sa2"].cast(IntegerT
 population = pd.read_csv("../data/curated/SA2_total_population.csv")
 income = pd.read_csv("../data/curated/SA2_income.csv")
 census = pd.read_csv("../data/curated/SA2_census.csv")
-boundaries = pd.read_csv("../data/curated/SA2_district_boundaries.csv")
+# boundaries = pd.read_csv("../data/curated/SA2_district_boundaries.csv")
 
 # ----------------------------------------------------------------------------
 # Remove the first unwanted column from ABS datasets
 population = population.iloc[:,1:]
 income = income.iloc[:,1:]
 census = census.iloc[:,1:]
-boundaries = boundaries.iloc[:,1:]
+# boundaries = boundaries.iloc[:,1:]
 
 # ----------------------------------------------------------------------------
 # Perform inner join on income and census dataset
@@ -438,11 +438,11 @@ income_census = pd.merge(income, census, on = 'SA2_code')
 
 # ----------------------------------------------------------------------------
 # Perform inner join on population and boundaries dataset
-pop_bd = pd.merge(population, boundaries, on = ['SA2_code','SA2_name', 'state_code', 'state_name'])
+# pop_bd = pd.merge(population, boundaries, on = ['SA2_code','SA2_name', 'state_code', 'state_name'])
 
 # ----------------------------------------------------------------------------
 # Make a final dataset from the the merged datasets
-SA2_datasets = pd.merge(income_census, pop_bd, on = ['SA2_code', 'SA2_name'])
+SA2_datasets = pd.merge(income_census, population, on = ['SA2_code', 'SA2_name'])
 
 # ----------------------------------------------------------------------------
 # Convert SA2_datasets to pyspark dataframe
@@ -454,5 +454,5 @@ SA2_datasets_spark = spark.createDataFrame(SA2_datasets)
 final_join3 = final_join2.join(SA2_datasets_spark, final_join2.int_sa2 == SA2_datasets_spark.SA2_code, "inner") \
         .drop(F.col("postcode"))
 
-# final_join3.write.mode('overwrite').parquet("../data/tables/full_join.parquet")
+final_join3.write.mode('overwrite').parquet("../data/tables/full_join.parquet")
 
