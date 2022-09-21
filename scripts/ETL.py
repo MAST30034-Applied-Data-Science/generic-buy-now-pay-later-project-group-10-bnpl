@@ -110,7 +110,7 @@ final_join = tbl_merchants.join(add_consumer, tbl_merchants.merchant_abn == add_
         .drop(F.col("trans_user_id"))
 
 #============================================================================================
-# Adding postcode stuff in 
+# Adding postcode stuff in
 #============================================================================================
 postcode = spark.read.option("header", True).csv(curated_path +'postcode.csv')
 postcode = postcode.drop(F.col("_c0"))

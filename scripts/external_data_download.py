@@ -121,7 +121,7 @@ SA2_POSTCODE_URL = "https://raw.githubusercontent.com/matthewproctor/australianp
 
 #--------------------------------------------------------------------------------------------
 # Define the file names
-output_csv = "../data/postcode.csv"
+output_csv = "../data/curated/postcode.csv"
 
 #--------------------------------------------------------------------------------------------
 # Download the data
