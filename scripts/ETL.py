@@ -452,4 +452,3 @@ final_join3 = final_join2.join(SA2_datasets_spark, final_join2.int_sa2 == SA2_da
         .drop(F.col("postcode"))
 
 final_join3.write.mode('overwrite').parquet("../data/tables/full_join.parquet")
-
