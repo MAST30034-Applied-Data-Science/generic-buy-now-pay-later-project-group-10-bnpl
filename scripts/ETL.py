@@ -98,11 +98,6 @@ urlretrieve(url, output_csv)
 #============================================================================================
 # MAKE NEW DIRECTORIES TO SAVE THE ABS DATASETS
 #============================================================================================
-# Code adapted from MAST30034 Tutorial 1
-# from the current `tute_1` directory, go back two levels to the `MAST30034` directory
-output_relative_dir = '../data/'
-
-#--------------------------------------------------------------------------------------------
 # check if it exists as it makedir will raise an error if it does exist
 if not os.path.exists(external_data_path):
     os.makedirs(external_data_path)
@@ -234,6 +229,8 @@ tbl_merchants = df.withColumn('categories', F.split(df['tags'], '[)\]], [\[(]').
         .withColumn('revenue_levels', F.split(df['tags'], '[)\]], [\[(]').getItem(1)) \
         .drop(F.col("tags")) \
         .withColumnRenamed("name", "merchant_name")
+
+# tbl_merchants = tbl_merchants.filter("merchant_abn IS NOT NULL")
 
 #============================================================================================
 # PREPROCESSING CONSUMER DATA
