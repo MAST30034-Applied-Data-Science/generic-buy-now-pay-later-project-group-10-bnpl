@@ -11,6 +11,7 @@ import json
 from urllib.request import urlretrieve
 from zipfile import ZipFile
 import os
+import sys
 import geopandas as gpd
 
 #============================================================================================
@@ -21,7 +22,8 @@ spark = (
     .config("spark.sql.repl.eagerEval.enabled", True) 
     .config("spark.sql.parquet.cacheMetadata", "true")
     .config("spark.sql.session.timeZone", "Etc/UTC")
-    .config("spark.driver.memory", "10g")
+    .config("spark.driver.memory", "15g")
+    .config("spark.executor.memory", "5g")
     .getOrCreate()
 )
 
@@ -31,7 +33,10 @@ spark = (
 # EXTRACT INTERNAL DATA FROM TABLES DIRECTORY
 #============================================================================================
 # Define relative target directories
-with open("../scripts/paths.json") as json_paths: 
+
+paths_arg = sys.argv[1]
+
+with open(paths_arg) as json_paths: 
     PATHS = json.load(json_paths)
     json_paths.close()
 
@@ -98,11 +103,6 @@ urlretrieve(url, output_csv)
 #============================================================================================
 # MAKE NEW DIRECTORIES TO SAVE THE ABS DATASETS
 #============================================================================================
-# Code adapted from MAST30034 Tutorial 1
-# from the current `tute_1` directory, go back two levels to the `MAST30034` directory
-output_relative_dir = '../data/'
-
-#--------------------------------------------------------------------------------------------
 # check if it exists as it makedir will raise an error if it does exist
 if not os.path.exists(external_data_path):
     os.makedirs(external_data_path)
@@ -234,6 +234,8 @@ tbl_merchants = df.withColumn('categories', F.split(df['tags'], '[)\]], [\[(]').
         .withColumn('revenue_levels', F.split(df['tags'], '[)\]], [\[(]').getItem(1)) \
         .drop(F.col("tags")) \
         .withColumnRenamed("name", "merchant_name")
+
+# tbl_merchants = tbl_merchants.filter("merchant_abn IS NOT NULL")
 
 #============================================================================================
 # PREPROCESSING CONSUMER DATA
@@ -454,4 +456,4 @@ SA2_datasets_spark = spark.createDataFrame(SA2_datasets)
 final_join3 = final_join2.join(SA2_datasets_spark, final_join2.int_sa2 == SA2_datasets_spark.SA2_code, "inner") \
         .drop(F.col("postcode"))
 
-final_join3.write.mode('overwrite').parquet("../data/tables/full_join.parquet")
+#final_join3.write.mode('overwrite').parquet("../data/tables/full_join.parquet")
