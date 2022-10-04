@@ -456,4 +456,36 @@ SA2_datasets_spark = spark.createDataFrame(SA2_datasets)
 final_join3 = final_join2.join(SA2_datasets_spark, final_join2.int_sa2 == SA2_datasets_spark.SA2_code, "inner") \
         .drop(F.col("postcode"))
 
+
+#============================================================================================
+# ADD FRAUD DATA TO A FINAL DATASET
+#============================================================================================
+
+# adding consumer fraud data
+final_join3 = final_join3.alias("a").join(fraud_consumer.alias("b"), (final_join3.user_id == fraud_consumer.user_id) \
+                               & (final_join3.order_datetime == fraud_consumer.order_datetime), "left_outer") \
+                                .select("a.*","b.fraud_probability")
+
+# rename fraud probability for consumer fraud data
+final_join3 = final_join3.withColumnRenamed('fraud_probability', 'fraud_probability_consumer')
+
+# adding merchant fraud data
+final_join3 = final_join3.alias("a").join(fraud_merchants.alias("b"), (final_join3.merchant_abn == fraud_merchants.merchant_abn) \
+                               & (final_join3.order_datetime == fraud_merchants.order_datetime), "left_outer") \
+                                .select("a.*","b.fraud_probability")
+    
+# rename fraud probability for merchant fraud data
+final_join3 = final_join3.withColumnRenamed('fraud_probability', 'fraud_probability_merchant')
+
+# apply double type to fraud probability
+from pyspark.sql.types import DoubleType
+final_join3 = final_join3.withColumn("fraud_probability_consumer",col("fraud_probability_consumer").cast(DoubleType())) \
+                            .withColumn("fraud_probability_merchant",col("fraud_probability_merchant").cast(DoubleType()))
+
+# Add small values to the null value
+SMALL_PROB = 0.01
+
+final_join3 = final_join3.fillna(SMALL_PROB, subset=["fraud_probability_merchant", "fraud_probability_consumer"])
+
+
 #final_join3.write.mode('overwrite').parquet("../data/tables/full_join.parquet")
