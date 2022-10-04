@@ -22,7 +22,8 @@ spark = (
     .config("spark.sql.repl.eagerEval.enabled", True) 
     .config("spark.sql.parquet.cacheMetadata", "true")
     .config("spark.sql.session.timeZone", "Etc/UTC")
-    .config("spark.driver.memory", "10g")
+    .config("spark.driver.memory", "15g")
+    .config("spark.executor.memory", "5g")
     .getOrCreate()
 )
 
@@ -455,4 +456,4 @@ SA2_datasets_spark = spark.createDataFrame(SA2_datasets)
 final_join3 = final_join2.join(SA2_datasets_spark, final_join2.int_sa2 == SA2_datasets_spark.SA2_code, "inner") \
         .drop(F.col("postcode"))
 
-final_join3.write.mode('overwrite').parquet("../data/tables/full_join.parquet")
+#final_join3.write.mode('overwrite').parquet("../data/tables/full_join.parquet")
