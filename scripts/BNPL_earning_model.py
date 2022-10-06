@@ -1,21 +1,30 @@
-#============================================================================================
-# Import libraries
+import pandas as pd
 from pyspark.sql import SparkSession, functions as F
+import lbl2vec
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.cluster import KMeans
+import numpy as np
+from pyspark.sql.functions import date_format
+from pyspark.sql.functions import max
+from pyspark.sql.functions import lit
+from pyspark.sql.functions import year, month
+from pyspark.sql.functions import col,isnan, when, count
+import statsmodels.api as sm
+from statsmodels.formula.api import ols
 from pyspark.ml.feature import IndexToString, StringIndexer, VectorIndexer
 from pyspark.ml.evaluation import MulticlassClassificationEvaluator
 from pyspark.ml.feature import OneHotEncoder, VectorAssembler
-from pyspark.sql.functions import col,isnan, when, count
 from pyspark.ml.regression import RandomForestRegressor
 from pyspark.ml.evaluation import RegressionEvaluator
-from pyspark.sql.functions import date_format
 from pyspark.sql.functions import year, month
-import pandas as pd
-import lbl2vec
-import os 
+from pyspark.sql.functions import col,isnan, when, count
+import seaborn as sns
+import matplotlib
+import matplotlib.pyplot as plt
 import ETL
 
-#==============================================================================
-# Start a spark session
+
+# Create a spark session
 spark = (
     SparkSession.builder.appName("MAST30034 Project 2")
     .config("spark.sql.repl.eagerEval.enabled", True) 
@@ -25,24 +34,14 @@ spark = (
     .config("spark.executor.memory", "10g")
     .getOrCreate()
 )
-#==============================================================================
-# STEP 1: Preprocess and prepare the main dataset
-#==============================================================================
-# ----------------------------------------------------------------------------
-# Read the tagged merchant data and convert it to a parquet
+
 tagged_merchants_sdf = spark.read.parquet("../data/curated/tagged_merchants.parquet")
 
-# ----------------------------------------------------------------------------
-# Change the column name for the merchant abn for later separation
 tagged_merchants_sdf = tagged_merchants_sdf.withColumnRenamed('merchant_abn',
 
     'tagged_merchant_abn'
 )
 
-# ----------------------------------------------------------------------------
-# Read the final dataset from the ETL script and join it to the tagged dataset
-
-# Create a temporary view for the SQL query
 ETL.final_join3.createOrReplaceTempView("join")
 tagged_merchants_sdf.createOrReplaceTempView("tagged")
 
@@ -56,29 +55,25 @@ ON join.merchant_abn = tagged.tagged_merchant_abn
 
 joint = joint.drop('tagged_merchant_abn')
 
-# ----------------------------------------------------------------------------
-# Calculate the share of the BNPL firm to be subtracted later from the dollar
-# value to get the merchant revenue
 joint.createOrReplaceTempView("group")
 
 main_data = spark.sql(""" 
 
-SELECT *, ((take_rate/100)*dollar_value) AS percent
+SELECT *, ((take_rate/100)*dollar_value) AS BNPL_earnings
 FROM group
 """)
 
 # Extracting the year, month, day from the timestamp
-
-
 main_data = main_data.withColumn('Year', year(main_data.order_datetime))
 main_data = main_data.withColumn('Month',month(main_data.order_datetime))
 
-main_data = main_data.drop('merchant_abn', 'categories','name', 'address', 'trans_merchant_abn', 'order_id','order_datetime','user_id',
-'consumer_id','int_sa2','SA2_name','state_code','state_name','population_2020', 'population_2021')
+main_data = main_data.drop('merchant_abn', 'categories','name', 'address', 'trans_merchant_abn', 'order_id','order_datetime','user_id','consumer_id','int_sa2',
+'SA2_name','state_code','state_name','population_2020', 'population_2021')
 
-
- # Find Count of Null, None, NaN of All DataFrame Columns
-main_data.select([count(when(isnan(c) | col(c).isNull(), c)).alias(c) for c in main_data.columns])
+ 
+# Find Count of Null, None, NaN of All DataFrame Columns
+main_data.select([count(when(isnan(c) | col(c).isNull(), c)).alias(c) for c in main_data.columns]
+   )
 
 main_data.createOrReplaceTempView("agg")
 
@@ -101,38 +96,35 @@ GROUP BY merchant_name, SA2_code, Year, Month
 
 main_data.createOrReplaceTempView("agg")
 
-main_agg_data = spark.sql(""" 
+main_agg = spark.sql(""" 
 
-SELECT merchant_name, COUNT(merchant_name) AS no_of_transactions, SA2_code, Year, Month, SUM(dollar_value - percent) AS total_earnings,
+SELECT merchant_name, COUNT(merchant_name) AS no_of_transactions, SA2_code, Year, Month, SUM(BNPL_earnings) AS BNPL_earnings,
     CONCAT(merchant_name, SA2_code, Year, Month) AS join_col
 FROM agg
 GROUP BY merchant_name, SA2_code, Year, Month
 """)
 
+main_agg.createOrReplaceTempView("gender_join")
+male.createOrReplaceTempView("m")
+female.createOrReplaceTempView("f")
 
-
-main_agg_data.createOrReplaceTempView("gender_join")
-male.createOrReplaceTempView("male_agg")
-female.createOrReplaceTempView("female_agg")
-
-temp = spark.sql(""" 
+temp2 = spark.sql(""" 
 
 SELECT *
 FROM gender_join
-INNER JOIN male_agg
-ON gender_join.join_col = male_agg.m_name
+INNER JOIN m
+ON gender_join.join_col = m.m_name
 """)
 
-temp.createOrReplaceTempView("temp")
+temp2.createOrReplaceTempView("temp2")
 
-gender_agg = spark.sql(""" 
+temp3 = spark.sql(""" 
 
 SELECT *
-FROM temp
-INNER JOIN female_agg
-ON temp.join_col = female_agg.f_name
+FROM temp2
+INNER JOIN f
+ON temp2.join_col = f.f_name
 """)
-
 
 main_data = main_data.withColumnRenamed('income_2018-2019',
 
@@ -146,7 +138,7 @@ main_data = main_data.withColumn('income_per_persons',
 
 main_data.createOrReplaceTempView("features")
 
-other_agg = spark.sql(""" 
+e = spark.sql(""" 
 
 SELECT merchant_name AS drop_name, FIRST(take_rate) AS take_rate, FIRST(revenue_levels) AS revenue_levels, FIRST(category) AS category,
     FIRST(total_males) AS males_in_SA2, FIRST(total_females) AS females_in_SA2, FIRST(income_per_persons) AS income_per_person
@@ -154,11 +146,10 @@ FROM features
 GROUP BY merchant_name
 """)
 
+temp3.createOrReplaceTempView("edit")
+e.createOrReplaceTempView("rates")
 
-gender_agg.createOrReplaceTempView("edit")
-other_agg.createOrReplaceTempView("rates")
-
-other_cols = spark.sql(""" 
+temp4 = spark.sql(""" 
 
 SELECT *
 FROM edit
@@ -166,23 +157,21 @@ INNER JOIN rates
 ON edit.merchant_name = rates.drop_name
 """)
 
-train = other_cols.drop('m_name', 'f_name', 'drop_name','join_col')
+train = temp4.drop('m_name', 'f_name', 'drop_name','join_col')
 
-train.limit(5)
+train_projection = train.select("merchant_name", "SA2_code", "Year", "Month", 'BNPL_earnings')
 
-train_projection = train.select("merchant_name", "SA2_code", "Year", "Month", 'total_earnings')
 
 train_projection = train_projection.withColumn("prev_year", \
               when(train_projection["Month"] == 1, train_projection['Year'] - 1).otherwise(train_projection['Year']))
 train_projection = train_projection.withColumn("prev_month", \
               when(train_projection["Month"] == 1, 12).otherwise(train_projection['Month'] - 1))
 train_projection = train_projection.drop("Year", "Month")
-train_projection = train_projection.withColumnRenamed("total_earnings", "future_earnings") \
+train_projection = train_projection.withColumnRenamed("BNPL_earnings", "future_earnings") \
                             .withColumnRenamed("merchant_name", "p_merchant_name") \
                             .withColumnRenamed("SA2_code", "p_SA2_code")
 
-
-final_data= train.join(train_projection, (train.merchant_name == train_projection.p_merchant_name) & 
+final_data = train.join(train_projection, (train.merchant_name == train_projection.p_merchant_name) & 
                            (train.SA2_code == train_projection.p_SA2_code) & 
                            (train.Year == train_projection.prev_year) & 
                            (train.Month == train_projection.prev_month), how = 'inner')
@@ -190,19 +179,27 @@ final_data= train.join(train_projection, (train.merchant_name == train_projectio
 final_data = final_data.drop("p_merchant_name", "p_SA2_code","prev_year", "prev_month")
 
 
-field_str = ['Year', 'Month', 'SA2_code']
+final_data = final_data.withColumn('Year',
 
-for cols in field_str:
-    final_data = final_data.withColumn(cols,
-
-    F.col(cols).cast('STRING')
+    F.col('Year').cast('STRING')
 
 )
 
+final_data = final_data.withColumn('Month',
 
-field_int = ['no_of_transactions', 'males', 'females', 'males_in_SA2', 'females_in_SA2']
+    F.col('Month').cast('STRING')
 
-for col in field_int:
+)
+
+final_data = final_data.withColumn('SA2_code',
+
+    F.col('SA2_code').cast('STRING')
+
+)
+
+field = ['no_of_transactions', 'males', 'females', 'males_in_SA2', 'females_in_SA2']
+
+for col in field:
     final_data = final_data.withColumn(col,
 
     F.col(col).cast('INT')
@@ -226,10 +223,11 @@ onehotdata = encoder.fit(indexd_data).transform(indexd_data)
 
 # Assembling the training data as a vector of features 
 assembler1 = VectorAssembler(
-inputCols=['merchant_name_vec', 'SA2_code_vec', 'Year_vec', 'Month_vec', 'revenue_levels_vec','category_vec','males_in_SA2','females_in_SA2', 'income_per_person', 'no_of_transactions','take_rate', 'total_earnings'],
+inputCols=['merchant_name_vec', 'SA2_code_vec', 'Year_vec', 'Month_vec', 'revenue_levels_vec','category_vec','males_in_SA2','females_in_SA2', 'income_per_person', 'no_of_transactions','take_rate', 'BNPL_earnings'],
 outputCol= "features" )
 
 outdata1 = assembler1.transform(onehotdata)
+
 
 # Renaming the target column as label
 
@@ -261,7 +259,6 @@ model = rf.fit(trainingData)
 # Make predictions.
 predictions_validation = model.transform(testData)
 
-
 # Evaluate the validation set 
 
 predictions_validation.select("prediction", "label", "features")
@@ -271,13 +268,25 @@ predictions_validation.select("prediction", "label", "features")
 evaluator_train_rmse = RegressionEvaluator(
     labelCol="label", predictionCol="prediction", metricName="rmse")
 rmse_train = evaluator_train_rmse.evaluate(predictions_validation)
-print("Root Mean Squared Error (RMSE) on train data = %g" % rmse_train)
 
 evaluator_train_mae = RegressionEvaluator(
     labelCol="label", predictionCol="prediction", metricName="mae")
 mae_train = evaluator_train_mae.evaluate(predictions_validation)
-print("Mean Absolutee Error (MAE) on train data = %g" % mae_train)
 
+
+
+def ExtractFeatureImportance(featureImp, dataset, featuresCol):
+    list_extract = []
+    for i in dataset.schema[featuresCol].metadata["ml_attr"]["attrs"]:
+        list_extract = list_extract + dataset.schema[featuresCol].metadata["ml_attr"]["attrs"][i]
+    varlist = pd.DataFrame(list_extract)
+    varlist['score'] = varlist['idx'].apply(lambda x: featureImp[x])
+    return(varlist.sort_values('score', ascending = False))
+  
+  
+#ExtractFeatureImportance(model.stages[-1].featureImportances, dataset, "features")
+dataset_fi = ExtractFeatureImportance(model.featureImportances, predictions_validation, "features")
+dataset_fi = spark.createDataFrame(dataset_fi)
 
 
 latest_year = train.select(max('Year')).collect()[0][0]
@@ -304,7 +313,7 @@ onehotdata = encoder.fit(indexd_data).transform(indexd_data)
 
 # Assembling the training data as a vector of features 
 assembler1 = VectorAssembler(
-inputCols=['merchant_name_vec', 'SA2_code_vec', 'Year_vec', 'Month_vec', 'revenue_levels_vec','category_vec','males_in_SA2','females_in_SA2', 'income_per_person', 'no_of_transactions','take_rate', 'total_earnings'],
+inputCols=['merchant_name_vec', 'SA2_code_vec', 'Year_vec', 'Month_vec', 'revenue_levels_vec','category_vec','males_in_SA2','females_in_SA2', 'income_per_person', 'no_of_transactions','take_rate', 'BNPL_earnings'],
 outputCol= "features" )
 
 outdata1 = assembler1.transform(onehotdata)
@@ -325,32 +334,18 @@ featureIndexer =\
 
 outdata1 = featureIndexer.transform(outdata1)
 
-
-
 predictions_test = model.transform(outdata1)
 
 predictions_test.createOrReplaceTempView("preds")
 
 pred = spark.sql(""" 
 
-SELECT merchant_name, SUM(prediction) AS total_revenue
+SELECT merchant_name, SUM(prediction) AS total_earnings_of_BNPL
 FROM preds
 GROUP BY merchant_name
 
 """)
-def ExtractFeatureImportance(featureImp, dataset, featuresCol):
-    list_extract = []
-    for i in dataset.schema[featuresCol].metadata["ml_attr"]["attrs"]:
-        list_extract = list_extract + dataset.schema[featuresCol].metadata["ml_attr"]["attrs"][i]
-    varlist = pd.DataFrame(list_extract)
-    varlist['score'] = varlist['idx'].apply(lambda x: featureImp[x])
-    return(varlist.sort_values('score', ascending = False))
-  
-  
-#ExtractFeatureImportance(model.stages[-1].featureImportances, dataset, "features")
-dataset_fi = ExtractFeatureImportance(model.featureImportances, predictions_validation, "features")
-dataset_fi = spark.createDataFrame(dataset_fi)
 
 pred_df = pred.toPandas()
 
-pred_df.to_csv("../data/curated/revenue.csv")
+pred_df.to_csv("../data/curated/BNPL_earnings.csv")

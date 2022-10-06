@@ -1,10 +1,13 @@
+#==============================================================================
+# Import libraries
 import pandas as pd
 from pyspark.sql import SparkSession, functions as F
 import lbl2vec
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.cluster import KMeans
 import numpy as np
-
+from sklearn.feature_extraction.text import CountVectorizer
+#==============================================================================
 
 # Create a spark session
 spark = (
@@ -16,23 +19,34 @@ spark = (
     .getOrCreate()
 )
 
-consumer = pd.read_csv("/Users/Kasturi/Documents/GitHub/generic-buy-now-pay-later-project-group-10-bnpl/data/tables/tbl_consumer.csv", delimiter="|")
+# ----------------------------------------------------------------------------
+# Read the consumer data
+consumer = pd.read_csv("/..data/tables/tbl_consumer.csv", delimiter="|")
 
-merchants = spark.read.parquet("/Users/Kasturi/Documents/GitHub/generic-buy-now-pay-later-project-group-10-bnpl/data/tables/tbl_merchants.parquet")
+# ----------------------------------------------------------------------------
+# Read the merchant data
+merchants = spark.read.parquet("/../data/tables/tbl_merchants.parquet")
 
+# ----------------------------------------------------------------------------
+# Convert the merchant data to a pandas dataframe
 merchants_df = merchants.toPandas()
 
+# ----------------------------------------------------------------------------
 # Separate tags from revenue and take rate
 tags = merchants_df["tags"].str.split("\), ", expand=True)
 tags = tags[0].str.split("\], ", expand=True)
+
+# ----------------------------------------------------------------------------
 # Remove symbols from tag and making everything lowercase
 tags = tags[0].str.replace('[^\w\s]', '', regex = True)
 tags = tags.str.lower()
 
-
+# ----------------------------------------------------------------------------
+# Save the cleaned tags in the original dataframe
 merchants_df['cleaned_tags'] = tags
 
-from sklearn.feature_extraction.text import CountVectorizer
+# ----------------------------------------------------------------------------
+# 
 cv = CountVectorizer(max_df=0.95, min_df=2, stop_words='english')
 dtm = cv.fit_transform(merchants_df['cleaned_tags'])
 
@@ -57,3 +71,9 @@ myDict = {0 : 'Furniture' , 1 : 'Toys and DIY', 2 : 'Beauty, Health, Personal an
 merchants_df['category'] = merchants_df['store_type'].map(myDict)
 
 
+merchants_df.to_csv("../data/curated/tagged_merchants.csv")
+
+
+tagged_for_modelling = merchants_df.drop(['tags', 'name', 'cleaned_tags', 'store_type'], axis=1)
+
+tagged_for_modelling.to_parquet("../data/curated/tagged_merchants.parquet")
