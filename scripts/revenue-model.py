@@ -22,7 +22,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 import ETL
 
-
+# ----------------------------------------------------------------------------
 # Create a spark session
 spark = (
     SparkSession.builder.appName("MAST30034 Project 2")
@@ -43,7 +43,8 @@ tagged_merchants_sdf = spark.read.parquet("../data/curated/tagged_merchants.parq
 
 # ----------------------------------------------------------------------------
 # Change the column name for the merchant abn for later separation
-tagged_merchants_sdf = tagged_merchants_sdf.withColumnRenamed('merchant_abn','tagged_merchant_abn')
+tagged_merchants_sdf = tagged_merchants_sdf.withColumnRenamed('merchant_abn',
+'tagged_merchant_abn')
 
 # ----------------------------------------------------------------------------
 # Read in final dataset from ETL.py file
@@ -58,6 +59,7 @@ INNER JOIN tagged
 ON join.merchant_abn = tagged.tagged_merchant_abn
 """)
 
+# ----------------------------------------------------------------------------
 # Delete the redundant column
 joint = joint.drop('tagged_merchant_abn')
 
@@ -78,26 +80,31 @@ main_data = main_data.withColumn('Year', year(main_data.order_datetime))
 main_data = main_data.withColumn('Month', month(main_data.order_datetime))
 
 # ----------------------------------------------------------------------------
-main_data = main_data.drop('merchant_abn', 'categories','name', 'address', 'trans_merchant_abn', 'order_id','order_datetime','user_id','consumer_id','int_sa2',
-'SA2_name','state_code','state_name','population_2020', 'population_2021','total_earning')
+main_data = main_data.drop('merchant_abn', 'categories','name', 'address', 
+'trans_merchant_abn', 'order_id','order_datetime','user_id','consumer_id',
+'int_sa2', 'SA2_name','state_code','state_name','population_2020', 
+'population_2021','total_earning')
 
 # ----------------------------------------------------------------------------
 # Find Count of Null, None, NaN of All DataFrame Columns
-null_values = main_data.select([count(when(isnan(c) | col(c).isNull(), c)).alias(c) for c in main_data.columns])
+null_values = main_data.select([count(when(isnan(c) | col(c).isNull(), 
+c)).alias(c) for c in main_data.columns])
 
 # ----------------------------------------------------------------------------
 # Find the number of male and female customers for every merchant 
 main_data.createOrReplaceTempView("agg")
 
 male = spark.sql(""" 
-SELECT CONCAT(merchant_name, SA2_code, Year, Month) AS m_name, COUNT(gender) as males
+SELECT CONCAT(merchant_name, SA2_code, Year, Month) AS m_name, 
+    COUNT(gender) as males
 FROM agg
 WHERE gender = 'Male'
 GROUP BY merchant_name, SA2_code, Year, Month
 """)
 
 female = spark.sql(""" 
-SELECT CONCAT(merchant_name, SA2_code, Year, Month) AS f_name, COUNT(gender) as females
+SELECT CONCAT(merchant_name, SA2_code, Year, Month) AS f_name, 
+    COUNT(gender) as females
 FROM agg
 WHERE gender = 'Female'
 GROUP BY merchant_name, SA2_code, Year, Month
@@ -110,7 +117,8 @@ GROUP BY merchant_name, SA2_code, Year, Month
 main_data.createOrReplaceTempView("agg")
 
 main_agg_data = spark.sql(""" 
-SELECT merchant_name, COUNT(merchant_name) AS no_of_transactions, SA2_code, Year, Month, SUM(dollar_value - take_rate) AS total_earnings,
+SELECT merchant_name, COUNT(merchant_name) AS no_of_transactions, SA2_code, 
+    Year, Month, SUM(dollar_value - take_rate) AS total_earnings, 
     CONCAT(merchant_name, SA2_code, Year, Month) AS join_col
 FROM agg
 GROUP BY merchant_name, SA2_code, Year, Month
@@ -157,8 +165,10 @@ main_data = main_data.withColumn('income_per_persons',
 main_data.createOrReplaceTempView("features")
 
 other_agg = spark.sql(""" 
-SELECT merchant_name AS drop_name, FIRST(take_rate) AS take_rate, FIRST(revenue_levels) AS revenue_levels, FIRST(category) AS category,
-    FIRST(total_males) AS males_in_SA2, FIRST(total_females) AS females_in_SA2, FIRST(income_per_persons) AS income_per_person
+SELECT merchant_name AS drop_name, FIRST(take_rate) AS take_rate, 
+    FIRST(revenue_levels) AS revenue_levels, FIRST(category) AS category,
+    FIRST(total_males) AS males_in_SA2, FIRST(total_females) AS females_in_SA2,
+    FIRST(income_per_persons) AS income_per_person
 FROM features
 GROUP BY merchant_name
 """)
@@ -185,30 +195,43 @@ train = other_cols.drop('m_name', 'f_name', 'drop_name','join_col')
 # ----------------------------------------------------------------------------
 # Select the main columns for offsetting
 
-train_projection = train.select("merchant_name", "SA2_code", "Year", "Month", 'total_earnings')
+train_projection = train.select("merchant_name", "SA2_code", "Year", "Month", 
+'total_earnings')
 
 # ----------------------------------------------------------------------------
 # Offset the dataset by 1 month
 
+# Offset the year by 1 if the month if the first month
 train_projection = train_projection.withColumn("prev_year", \
-              when(train_projection["Month"] == 1, train_projection['Year'] - 1).otherwise(train_projection['Year']))
+              when(train_projection["Month"] == 1, 
+              train_projection['Year'] - 1).otherwise(train_projection['Year']))
+
 train_projection = train_projection.withColumn("prev_month", \
-              when(train_projection["Month"] == 1, 12).otherwise(train_projection['Month'] - 1))
+              when(train_projection["Month"] == 1, 
+              12).otherwise(train_projection['Month'] - 1))
+
+# Drop the redundant columns
 train_projection = train_projection.drop("Year", "Month")
-train_projection = train_projection.withColumnRenamed("total_earnings", "future_earnings") \
-                            .withColumnRenamed("merchant_name", "p_merchant_name") \
-                            .withColumnRenamed("SA2_code", "p_SA2_code")
+
+# Renam the columns
+train_projection = train_projection.withColumnRenamed("BNPL_earnings", 
+                "future_earnings") \
+                .withColumnRenamed("merchant_name", "p_merchant_name") \
+                .withColumnRenamed("SA2_code", "p_SA2_code")
 
 # -----------------------------------------------------------------------------
 # Join the offsetted values to the rest of the SA2 and aggregated values
 
-final_data = train.join(train_projection, (train.merchant_name == train_projection.p_merchant_name) & 
-                           (train.SA2_code == train_projection.p_SA2_code) & 
-                           (train.Year == train_projection.prev_year) & 
-                           (train.Month == train_projection.prev_month), how = 'inner')
+final_data = train.join(train_projection, 
+            (train.merchant_name == train_projection.p_merchant_name) & 
+            (train.SA2_code == train_projection.p_SA2_code) & 
+            (train.Year == train_projection.prev_year) & 
+            (train.Month == train_projection.prev_month), how = 'inner')
 
+# -----------------------------------------------------------------------------
 # Drop the redundant columns
-final_data = final_data.drop("p_merchant_name", "p_SA2_code","prev_year", "prev_month")
+final_data = final_data.drop("p_merchant_name", "p_SA2_code","prev_year", 
+"prev_month")
 
 # -----------------------------------------------------------------------------
 # Change the variable types
@@ -217,7 +240,8 @@ field_str = ['Year', 'Month', 'SA2_code']
 for cols in field_str:
     final_data = final_data.withColumn(cols,F.col(cols).cast('STRING'))
 
-field_int = ['no_of_transactions', 'males', 'females', 'males_in_SA2', 'females_in_SA2']
+field_int = ['no_of_transactions', 'males', 'females', 'males_in_SA2', 
+'females_in_SA2']
 
 for col in field_int:
     final_data = final_data.withColumn(col, F.col(col).cast('INT'))
@@ -228,22 +252,28 @@ for col in field_int:
 # -----------------------------------------------------------------------------
 # String indexing the categorical columns
 
-indexer = StringIndexer(inputCols = ['merchant_name', 'SA2_code', 'Year', 'Month', 'revenue_levels','category'],
-outputCols = ['merchant_name_num', 'SA2_code_num', 'Year_num', 'Month_num', 'revenue_levels_num','category_num'], handleInvalid="keep")
+indexer = StringIndexer(inputCols = ['merchant_name', 'SA2_code', 'Year', 
+'Month', 'revenue_levels','category'],
+outputCols = ['merchant_name_num', 'SA2_code_num', 'Year_num', 'Month_num', 
+'revenue_levels_num','category_num'], handleInvalid="keep")
 
 indexd_data = indexer.fit(final_data).transform(final_data)
 
 # -----------------------------------------------------------------------------
 # Applying onehot encoding to the categorical data that is string indexed above
-encoder = OneHotEncoder(inputCols = ['merchant_name_num', 'SA2_code_num', 'Year_num', 'Month_num', 'revenue_levels_num','category_num'],
-outputCols = ['merchant_name_vec', 'SA2_code_vec', 'Year_vec', 'Month_vec', 'revenue_levels_vec','category_vec'])
+encoder = OneHotEncoder(inputCols = ['merchant_name_num', 'SA2_code_num', 
+'Year_num', 'Month_num', 'revenue_levels_num','category_num'],
+outputCols = ['merchant_name_vec', 'SA2_code_vec', 'Year_vec', 'Month_vec', 
+'revenue_levels_vec','category_vec'])
 
 onehotdata = encoder.fit(indexd_data).transform(indexd_data)
 
 # -----------------------------------------------------------------------------
 # Assembling the training data as a vector of features 
 assembler1 = VectorAssembler(
-inputCols=['merchant_name_vec', 'SA2_code_vec', 'Year_vec', 'Month_vec', 'revenue_levels_vec','category_vec','males_in_SA2','females_in_SA2', 'income_per_person', 'no_of_transactions','take_rate', 'total_earnings'],
+inputCols=['merchant_name_vec', 'SA2_code_vec', 'Year_vec', 'Month_vec', 
+'revenue_levels_vec','category_vec','males_in_SA2','females_in_SA2', 
+'income_per_person', 'no_of_transactions','take_rate', 'total_earnings'],
 outputCol= "features" )
 
 outdata1 = assembler1.transform(onehotdata)
@@ -303,16 +333,19 @@ mae_train_revenue = evaluator_train_mae.evaluate(predictions_validation)
 def ExtractFeatureImportance(featureImp, dataset, featuresCol):
     list_extract = []
     for i in dataset.schema[featuresCol].metadata["ml_attr"]["attrs"]:
-        list_extract = list_extract + dataset.schema[featuresCol].metadata["ml_attr"]["attrs"][i]
+        list_extract = list_extract + dataset.schema[featuresCol
+        ].metadata["ml_attr"]["attrs"][i]
     varlist = pd.DataFrame(list_extract)
     varlist['score'] = varlist['idx'].apply(lambda x: featureImp[x])
     return(varlist.sort_values('score', ascending = False))
   
 # -----------------------------------------------------------------------------
 # Extract the first five most important feature
-important_five_revenue = ExtractFeatureImportance(model.featureImportances, predictions_validation, "features")
+important_five_revenue = ExtractFeatureImportance(model.featureImportances, 
+predictions_validation, "features")
 important_five_revenue = spark.createDataFrame(important_five_revenue)
 important_five_revenue_df = important_five_revenue.toPandas()
+
 # -----------------------------------------------------------------------------
 # Select the latest month from the latest year in the dataset which will be
 # used as a test set for future predictions due to the offsetting done 
@@ -331,22 +364,28 @@ predicting_data.limit(5)
 # Repeat the indexing and vector assembling steps again for the test data
 # String indexing the categorical columns
 
-indexer = StringIndexer(inputCols = ['merchant_name', 'SA2_code', 'Year', 'Month', 'revenue_levels','category'],
-outputCols = ['merchant_name_num', 'SA2_code_num', 'Year_num', 'Month_num', 'revenue_levels_num','category_num'], handleInvalid="keep")
+indexer = StringIndexer(inputCols = ['merchant_name', 'SA2_code', 'Year', 
+'Month', 'revenue_levels','category'],
+outputCols = ['merchant_name_num', 'SA2_code_num', 'Year_num', 'Month_num', 
+'revenue_levels_num','category_num'], handleInvalid="keep")
 
 indexd_data = indexer.fit(predicting_data).transform(predicting_data)
 
 # -----------------------------------------------------------------------------
 # Applying onehot encoding to the categorical data that is string indexed above
-encoder = OneHotEncoder(inputCols = ['merchant_name_num', 'SA2_code_num', 'Year_num', 'Month_num', 'revenue_levels_num','category_num'],
-outputCols = ['merchant_name_vec', 'SA2_code_vec', 'Year_vec', 'Month_vec', 'revenue_levels_vec','category_vec'])
+encoder = OneHotEncoder(inputCols = ['merchant_name_num', 'SA2_code_num', 
+'Year_num', 'Month_num', 'revenue_levels_num','category_num'],
+outputCols = ['merchant_name_vec', 'SA2_code_vec', 'Year_vec', 'Month_vec', 
+'revenue_levels_vec','category_vec'])
 
 onehotdata = encoder.fit(indexd_data).transform(indexd_data)
 
 # -----------------------------------------------------------------------------
 # Assembling the training data as a vector of features 
 assembler1 = VectorAssembler(
-inputCols=['merchant_name_vec', 'SA2_code_vec', 'Year_vec', 'Month_vec', 'revenue_levels_vec','category_vec','males_in_SA2','females_in_SA2', 'income_per_person', 'no_of_transactions','take_rate', 'total_earnings'],
+inputCols=['merchant_name_vec', 'SA2_code_vec', 'Year_vec', 'Month_vec', 
+'revenue_levels_vec','category_vec','males_in_SA2','females_in_SA2', 
+'income_per_person', 'no_of_transactions','take_rate', 'total_earnings'],
 outputCol= "features" )
 
 outdata1 = assembler1.transform(onehotdata)
@@ -384,4 +423,4 @@ pred_df = pred.toPandas()
 pred_df.to_csv("../data/curated/revenue.csv")
 
 print('Finished Revenue Model')
-#--------------------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
