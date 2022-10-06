@@ -11,7 +11,7 @@ import json
 from urllib.request import urlretrieve
 from zipfile import ZipFile
 import os
-import sy
+import sys
 import geopandas as gpd
 
 #==============================================================================
