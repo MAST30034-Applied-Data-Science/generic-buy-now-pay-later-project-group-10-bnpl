@@ -1,3 +1,5 @@
+# -----------------------------------------------------------------------------
+# Import the libraries
 import pandas as pd
 from pyspark.sql import SparkSession, functions as F
 import lbl2vec
@@ -25,6 +27,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 import ETL
 
+# -----------------------------------------------------------------------------
 # Create a spark session
 spark = (
     SparkSession.builder.appName("MAST30034 Project 2")
@@ -36,15 +39,19 @@ spark = (
     .getOrCreate()
 )
 
+# -----------------------------------------------------------------------------
+# Read the tagged model
 tagged_merchants_sdf = spark.read.parquet("../data/curated/tagged_merchants.parquet")
 
-
+# -----------------------------------------------------------------------------
+# Join the final dataset to the tagged model
 tagged_merchants_sdf = tagged_merchants_sdf.withColumnRenamed('merchant_abn',
 
     'tagged_merchant_abn'
 )
 
-
+# -----------------------------------------------------------------------------
+# Calculate the BNPL earnings 
 ETL.final_join3.createOrReplaceTempView("join")
 tagged_merchants_sdf.createOrReplaceTempView("tagged")
 
@@ -56,9 +63,9 @@ INNER JOIN tagged
 ON join.merchant_abn = tagged.tagged_merchant_abn
 """)
 
+# -----------------------------------------------------------------------------
+# Calculate the BNPL earnings 
 joint = joint.drop('tagged_merchant_abn')
-
-
 joint.createOrReplaceTempView("group")
 
 a = spark.sql(""" 
