@@ -37,7 +37,9 @@ spark = (
     .getOrCreate()
 )
 
-# -----------------------------------------------------------------------------
+#==============================================================================
+# STEP 1: Prepare the main dataset
+#==============================================================================
 # Read the tagged model
 tagged_merchants_sdf = spark.read.parquet("../data/curated/tagged_merchants.parquet")
 
@@ -156,7 +158,7 @@ main_data = main_data.withColumnRenamed('income_2018-2019',
 )
 
 # -----------------------------------------------------------------------------
-# Calculayr the income per person for each SA2 code
+# Calculate the income per person for each SA2 code
 main_data = main_data.withColumn('income_per_persons',
     (F.col('income_2018_2019')/F.col('total_persons'))
 )
@@ -323,8 +325,8 @@ evaluator_train_mae = RegressionEvaluator(
     labelCol="label", predictionCol="prediction", metricName="mae")
 mae_train = evaluator_train_mae.evaluate(predictions_validation)
 
-
 # ----------------------------------------------------------------------------- 
+# Define a function to extract important feature column names
 def ExtractFeatureImportance(featureImp, dataset, featuresCol):
     list_extract = []
     for i in dataset.schema[featuresCol].metadata["ml_attr"]["attrs"]:
@@ -398,12 +400,9 @@ featureIndexer =\
     outputCol="indexedFeatures").fit(outdata1)
 
 # ----------------------------------------------------------------------------- 
-# Transaform the test data
+# Transform the test data
 outdata1 = featureIndexer.transform(outdata1)
 
-# -----------------------------------------------------------------------------
-# Aggregate the predicted data to merchant level to get the total predicted 
-# merchant revenue
 predictions_test = model.transform(outdata1)
 
 # ----------------------------------------------------------------------------- 

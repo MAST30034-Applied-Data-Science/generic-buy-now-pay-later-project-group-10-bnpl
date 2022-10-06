@@ -1,15 +1,16 @@
-#============================================================================================
+#==============================================================================
 # Importing required libraries
 import sys
 import pandas as pd
 
-#--------------------------------------------------------------------------------------------
-# take list of values as weights for fraud, transactions, revenue, customer, bnpl earnings
+#------------------------------------------------------------------------------
+# take list of values as weights for fraud, transactions, revenue, customer, 
+# bnpl earnings
 weights = list(sys.argv[1].split(','))
 
-#============================================================================================
+#==============================================================================
 # READING IN DATA
-#============================================================================================
+#==============================================================================
 # fraud = pd.read_parquet("../data/curated/fraud_feature.parquet")
 transactions = pd.read_csv("../data/curated/no_cust_ranking_feature.csv")
 # bnpl_earnings = pd.read_csv("../data/curated/BNPL_earnings.csv")
@@ -25,16 +26,20 @@ tags = tags.rename(columns={'name': 'merchant_name'})
 # fraud = fraud.rename(columns={'average fraud rate per merchant': 'fraud'})
 # fraud['merchant_abn'] = fraud['merchant_abn'].astype('int')
 
-tags_trans = pd.merge(tags, transactions, on=['merchant_abn','merchant_name'], how='inner')
-add_customers = pd.merge(tags_trans, customers, on ='merchant_name', how='inner')
-add_revenue = pd.merge(add_customers, revenue, on ='merchant_name', how='inner')
+tags_trans = pd.merge(tags, transactions, on=['merchant_abn','merchant_name'],
+how='inner')
+add_customers = pd.merge(tags_trans, customers, on ='merchant_name', 
+how='inner')
+add_revenue = pd.merge(add_customers, revenue, on ='merchant_name', 
+how='inner')
 #final = pd.merge(add_revenue, fraud, on ='merchant_abn', how='inner')
 
-# fraud_trans_tags = pd.merge(fraud_trans, tags, on=['merchant_abn', 'merchant_name'], how='inner')
+# fraud_trans_tags = pd.merge(fraud_trans, tags, on=['merchant_abn', 
+# 'merchant_name'], how='inner')
 
-#============================================================================================
+#==============================================================================
 # NORMALISE DATA
-#============================================================================================
+#==============================================================================
 # copy the data
 
 final = add_revenue
@@ -42,10 +47,11 @@ final = add_revenue
 # apply normalization techniques
 for column in final.columns:
     if type(column) == int:
-        final[column] = (final[column] - final[column].min()) / (final[column].max() - final[column].min())    
+        final[column] = (final[column] - final[column].min()) / (final[column
+                                                ].max() - final[column].min())    
 
 
-#--------------------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 # adding in the weights
 fraud_weights = int(weights[0])
 transactions_weights = int(weights[1])
@@ -57,7 +63,7 @@ tags_trans['ranking_feature'] = transactions_weights*final['prediction'] + \
                                 revenue_weights*final['total_revenue'] + \
                                 customer_weights*final['total_future_customers']
 
-#--------------------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 # splitting by tags for top 10 merchants
 tags = tags_trans.category.unique()
 
@@ -73,7 +79,7 @@ for tag in tags:
         print("Rank ", i+1, ": ", merchant_rank[i])
     print("\n")
     
-#--------------------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 # top 100 merchants
 final_rank = tags_trans.sort_values(by='ranking_feature', ascending=False)
 final_rank = final_rank.head(100)

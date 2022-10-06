@@ -24,25 +24,25 @@ spark = (
 # Read the consumer data
 consumer = pd.read_csv("/..data/tables/tbl_consumer.csv", delimiter="|")
 
-# ----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Read the merchant data
 merchants = spark.read.parquet("/../data/tables/tbl_merchants.parquet")
 
-# ----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Convert the merchant data to a pandas dataframe
 merchants_df = merchants.toPandas()
 
-# ----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Separate tags from revenue and take rate
 tags = merchants_df["tags"].str.split("\), ", expand=True)
 tags = tags[0].str.split("\], ", expand=True)
 
-# ----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Remove symbols from tag and making everything lowercase
 tags = tags[0].str.replace('[^\w\s]', '', regex = True)
 tags = tags.str.lower()
 
-# ----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Save the cleaned tags in the original dataframe
 merchants_df['cleaned_tags'] = tags
 

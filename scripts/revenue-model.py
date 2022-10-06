@@ -1,4 +1,4 @@
-#============================================================================================
+#==============================================================================
 import pandas as pd
 from pyspark.sql import SparkSession, functions as F
 import lbl2vec
@@ -22,7 +22,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 import ETL
 
-# ----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Create a spark session
 spark = (
     SparkSession.builder.appName("MAST30034 Project 2")
@@ -37,7 +37,6 @@ spark = (
 #==============================================================================
 # STEP 1: Prepare the main dataset
 #==============================================================================
-# ----------------------------------------------------------------------------
 # Read the tagged merchant data and convert it to a parquet
 tagged_merchants_sdf = spark.read.parquet("../data/curated/tagged_merchants.parquet")
 
@@ -46,7 +45,7 @@ tagged_merchants_sdf = spark.read.parquet("../data/curated/tagged_merchants.parq
 tagged_merchants_sdf = tagged_merchants_sdf.withColumnRenamed('merchant_abn',
 'tagged_merchant_abn')
 
-# ----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Read in final dataset from ETL.py file
 final_join3 = ETL.final_join3
 final_join3.createOrReplaceTempView("join")
@@ -59,11 +58,11 @@ INNER JOIN tagged
 ON join.merchant_abn = tagged.tagged_merchant_abn
 """)
 
-# ----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Delete the redundant column
 joint = joint.drop('tagged_merchant_abn')
 
-# ----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Calculate the share of the BNPL firm to be subtracted later from the dollar
 # value to get the merchant revenue
 joint.createOrReplaceTempView("group")
@@ -73,24 +72,24 @@ SELECT *, (dollar_value - take_rate) AS total_earning
 FROM group
 """)
 
-# ----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Extracting the year, month, day from the timestamp
 
 main_data = main_data.withColumn('Year', year(main_data.order_datetime))
 main_data = main_data.withColumn('Month', month(main_data.order_datetime))
 
-# ----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 main_data = main_data.drop('merchant_abn', 'categories','name', 'address', 
 'trans_merchant_abn', 'order_id','order_datetime','user_id','consumer_id',
 'int_sa2', 'SA2_name','state_code','state_name','population_2020', 
 'population_2021','total_earning')
 
-# ----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Find Count of Null, None, NaN of All DataFrame Columns
 null_values = main_data.select([count(when(isnan(c) | col(c).isNull(), 
 c)).alias(c) for c in main_data.columns])
 
-# ----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Find the number of male and female customers for every merchant 
 main_data.createOrReplaceTempView("agg")
 
@@ -110,7 +109,7 @@ WHERE gender = 'Female'
 GROUP BY merchant_name, SA2_code, Year, Month
 """)
 
-# ----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Aggregate the main data by merchant name, SA2 area code, year and month to
 # later join with the count of male and female customers
 
@@ -124,7 +123,7 @@ FROM agg
 GROUP BY merchant_name, SA2_code, Year, Month
 """)
 
-# ----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Join the main aggregated data to the female and male customer counts
 
 main_agg_data.createOrReplaceTempView("gender_join")
@@ -147,17 +146,17 @@ INNER JOIN f
 ON temp.join_col = f.f_name
 """)
 
-# ----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Change the column name
 main_data = main_data.withColumnRenamed('income_2018-2019', 'income_2018_2019')
 
-# ----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Calculate the income per person for each SA2 area code
 main_data = main_data.withColumn('income_per_persons',
     (F.col('income_2018_2019')/F.col('total_persons'))
 )
 
-# ----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Extract the values for revenue levels, category for every merchant and total
 # females, males and income per perosn for each SA2 code which are constant for
 # each mercahtn and SA2 code respectively 
@@ -173,7 +172,7 @@ FROM features
 GROUP BY merchant_name
 """)
 
-# ----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Join the above extracted values to the main dataset
 
 gender_agg.createOrReplaceTempView("edit")
@@ -198,7 +197,7 @@ train = other_cols.drop('m_name', 'f_name', 'drop_name','join_col')
 train_projection = train.select("merchant_name", "SA2_code", "Year", "Month", 
 'total_earnings')
 
-# ----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Offset the dataset by 1 month
 
 # Offset the year by 1 if the month if the first month
