@@ -5,6 +5,20 @@ from pyspark.sql import functions as F
 from pyspark.sql.functions import when
 from pyspark.sql import SparkSession
 from pyspark.sql import functions as countDistinct
+
+#============================================================================================
+# Create a spark session
+#============================================================================================
+spark = (
+    SparkSession.builder.appName("MAST30034 Project 2")
+    .config("spark.sql.repl.eagerEval.enabled", True)
+    .config("spark.sql.parquet.cacheMetadata", "true")
+    .config("spark.sql.session.timeZone", "Etc/UTC")
+    .config("spark.driver.memory", "15g")
+    .config("spark.executor.memory", "5g")
+    .getOrCreate()
+)
+
 #============================================================================================
 # LOAD THE DATA
 #============================================================================================
@@ -27,8 +41,18 @@ segments_data = spark.read.csv('../data/curated/tagged_merchants.csv')
 #============================================================================================
 # JOINING THE DATA TABLES
 #============================================================================================
+
+#Renaming columns to avoid duplicates
+fraud_consumer = fraud_consumer.withColumnRenamed("fraud_probability","cons_fraud_prob")\
+.withColumnRenamed("order_datetime","order_datetime_1").withColumnRenamed("user_id","user_id_1")
+
+fraud_merchant = fraud_merchant.withColumnRenamed("merchant_abn","merchant_abn_1").withColumnRenamed\
+("fraud_probability","merch_fraud_prob")
+
 #Joining consumer fraud and merchant fraud data together
 
+merchant_data = full_data.select\
+("merchant_abn", "categories","revenue_levels","dollar_value","user_id","consumer_id")
 merchant_data.createOrReplaceTempView("temp")
 
 fraud_consumer.createOrReplaceTempView("temp2")
