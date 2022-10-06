@@ -4,7 +4,8 @@ import lbl2vec
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.cluster import KMeans
 import numpy as np
-
+import json
+import sys
 
 # Create a spark session
 spark = (
@@ -16,9 +17,15 @@ spark = (
     .getOrCreate()
 )
 
-consumer = pd.read_csv("/Users/Kasturi/Documents/GitHub/generic-buy-now-pay-later-project-group-10-bnpl/data/tables/tbl_consumer.csv", delimiter="|")
+paths_arg = sys.argv[1]
 
-merchants = spark.read.parquet("/Users/Kasturi/Documents/GitHub/generic-buy-now-pay-later-project-group-10-bnpl/data/tables/tbl_merchants.parquet")
+with open(paths_arg) as json_paths: 
+    PATHS = json.load(json_paths)
+    json_paths.close()
+
+raw_internal_path = PATHS['raw_internal_data_path']
+
+merchants = spark.read.parquet(raw_internal_path + 'tbl_merchants.parquet')
 
 merchants_df = merchants.toPandas()
 
@@ -43,7 +50,7 @@ from sklearn.decomposition import LatentDirichletAllocation
 LDA = LatentDirichletAllocation(n_components=5,random_state=42)
 LDA.fit(dtm)
 for index,topic in enumerate(LDA.components_):
-    print(f'THE TOP 15 WORDS FOR TOPIC #{index}')
+    print(f'THE TOP 15 WORDS FOR TOPIC #{categories_label[index].upper()}')
     print([cv.get_feature_names()[i] for i in topic.argsort()[-15:]])
     print('\n')
 
