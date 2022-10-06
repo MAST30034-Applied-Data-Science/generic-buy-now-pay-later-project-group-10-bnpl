@@ -6,3 +6,5 @@ Note to groups: Make sure to read the `README.md` located in `./data/README.md` 
 packages to install:
 - openpyxl
 - matplotlib
+- scikit-learn
+- lbl2vec
