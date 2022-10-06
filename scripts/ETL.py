@@ -19,7 +19,7 @@ import geopandas as gpd
 #============================================================================================
 spark = (
     SparkSession.builder.appName("MAST30034 Project 2")
-    .config("spark.sql.repl.eagerEval.enabled", True) 
+    .config("spark.sql.repl.eagerEval.enabled", True)
     .config("spark.sql.parquet.cacheMetadata", "true")
     .config("spark.sql.session.timeZone", "Etc/UTC")
     .config("spark.driver.memory", "15g")
@@ -28,7 +28,7 @@ spark = (
 )
 
 #============================================================================================
-# EXTRACT 
+# EXTRACT
 #============================================================================================
 # EXTRACT INTERNAL DATA FROM TABLES DIRECTORY
 #============================================================================================
@@ -36,7 +36,7 @@ spark = (
 
 paths_arg = sys.argv[1]
 
-with open(paths_arg) as json_paths: 
+with open(paths_arg) as json_paths:
     PATHS = json.load(json_paths)
     json_paths.close()
 
@@ -98,7 +98,7 @@ output_csv = external_data_path + "covid.csv"
 
 #--------------------------------------------------------------------------------------------
 # Download the data
-urlretrieve(url, output_csv) 
+urlretrieve(url, output_csv)
 
 #============================================================================================
 # MAKE NEW DIRECTORIES TO SAVE THE ABS DATASETS
@@ -183,7 +183,7 @@ output_csv = external_data_path + "SA2_census/census.zip"
 
 #--------------------------------------------------------------------------------------------
 # Download the data
-urlretrieve(SA2_CENSUS_URL, output_csv) 
+urlretrieve(SA2_CENSUS_URL, output_csv)
 
 #--------------------------------------------------------------------------------------------
 # Opening the zip file in read mode
@@ -202,7 +202,7 @@ output_csv = external_data_path + "postcode.csv"
 
 #--------------------------------------------------------------------------------------------
 # Download the data
-urlretrieve(SA2_POSTCODE_URL, output_csv) 
+urlretrieve(SA2_POSTCODE_URL, output_csv)
 
 #============================================================================================
 # SA2 TO POSTCODE (for visualisations) DATA DOWNLOAD
@@ -216,7 +216,7 @@ output_csv = external_data_path + "visualisations_postcodes.csv"
 
 #--------------------------------------------------------------------------------------------
 # Download the data
-urlretrieve(SA2_POSTCODE_URL, output_csv) 
+urlretrieve(SA2_POSTCODE_URL, output_csv)
 
 #============================================================================================
 # TRANSFORM
@@ -225,7 +225,7 @@ urlretrieve(SA2_POSTCODE_URL, output_csv)
 #============================================================================================
 # Remove outer brackets in tags
 df = tbl_merchants.withColumn("tags", F.regexp_replace("tags", "[\])][\])]", "")) \
-        .withColumn("tags", F.regexp_replace("tags", "[\[(][\[(]", "")) 
+        .withColumn("tags", F.regexp_replace("tags", "[\[(][\[(]", ""))
 
 # separate tags into categories, take rate, and revenue level
 # convert take rate to double
@@ -263,7 +263,7 @@ population = population.iloc[8:,:31]
 cols = ['state_code', 'state_name', 'GCCSA_code', 'GCCSA_name', 'SA4_code', 'SA4_name',
 'SA3_code', 'SA3_name', 'SA2_code','SA2_name', '2001', '2002', '2003','2004','2005','2006',
 '2007','2008','2009','2010','2011','2012','2013','2014','2015','2016','2017','2018','2019',
-'population_2020','population_2021']	
+'population_2020','population_2021']
 
 # Set the new column names to the dataframe
 population.columns = cols
@@ -322,11 +322,11 @@ income.columns = cols_income
 # Selecting the required columns
 income = income[['SA2_code', "SA2_name", "income_2018-2019"]]
 
-# Remove the unwanted values i.e. values that are of type string in the numeric columns 
+# Remove the unwanted values i.e. values that are of type string in the numeric columns
 for index, rows in income.iteritems():
     if index != 'SA2_name':
         for value in rows.values:
-            if type(value) == str: 
+            if type(value) == str:
                 income = income[income[index] != value]
                 
 # Checking for null values
@@ -383,7 +383,7 @@ covid.to_csv("../data/curated/covid.csv")
 # postcodes = pd.read_csv("../data/postcode.csv")
 postcodes = spark.read.option("header", True).csv('../data/postcode.csv')
 
-# Selecting the required columns and renaming 
+# Selecting the required columns and renaming
 postcodes = postcodes.select(postcodes.postcode.alias("postcodes"), postcodes.SA2_MAINCODE_2016.alias("sa2"))
 postcode_nonull = postcodes.na.drop()
 
@@ -488,4 +488,4 @@ SMALL_PROB = 0.01
 final_join3 = final_join3.fillna(SMALL_PROB, subset=["fraud_probability_merchant", "fraud_probability_consumer"])
 
 
-#final_join3.write.mode('overwrite').parquet("../data/tables/full_join.parquet")
+final_join3.write.mode('overwrite').parquet("../data/tables/full_join.parquet")
