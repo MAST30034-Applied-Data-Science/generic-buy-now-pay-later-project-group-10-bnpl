@@ -16,7 +16,7 @@ Read the `README.md` located in `./data/README.md` for details.
 
 
 ### How to run the project
-To run the pipeline, visit `./notebook` folder and run the files in order:
+To run the pipeline, visit `./notebook/final_summary.ipynb` and run the cells in order.
 
 
 ### Authors
