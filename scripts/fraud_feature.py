@@ -124,8 +124,37 @@ is_fraud = when((final_join["_c6"] == "Electronics") & (final_join["cons_fraud_p
 # joining the boolean column to the rest of the data
 model_with_fraud = final_join.withColumn("is_fraud",is_fraud)
 
+#joining model_with_fraud with postcodes data for visualisations
+
+#cat = spark.read.parquet('/Users/ahirve/Desktop/ads_bnpl/data/tables/transactions_with_fraud_rates.parquet')
+#cat.limit(5)
+
+model_with_fraud = model_with_fraud.withColumnRenamed("merchant_abn","sus_merchant_abn")
+full_data = spark.read.parquet('../data/tables/full_join.parquet')
+
+full_data.createOrReplaceTempView("temp")
+
+model_with_fraud.createOrReplaceTempView("temp2")
+
+full_data_with_fraud = spark.sql("""
+
+SELECT *
+FROM temp
+
+
+LEFT JOIN temp2
+
+ON temp.merchant_abn = temp2.sus_merchant_abn
+""")
+
+
+
+
+
 #============================================================================================
-# SAVING FINAL DATASET
+# SAVING FINAL DATASETS
 #============================================================================================
 
-model_with_fraud.write.parquet("../data/tables/transactions_with_fraud_rates.parquet")
+model_with_fraud.write.mode("overwrite").parquet("../data/tables/transactions_with_fraud_rates.parquet")
+full_data_with_fraud.write.parquet('../data/tables/postcodes_with_fraud_rates.parquet')
+
