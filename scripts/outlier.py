@@ -1,6 +1,5 @@
 #==============================================================================
 from pyspark.sql import SparkSession
-from pyspark.sql import SparkSession
 import pandas as pd
 import ETL
 
