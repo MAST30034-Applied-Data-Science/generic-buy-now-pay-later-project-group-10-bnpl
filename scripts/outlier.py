@@ -39,3 +39,7 @@ data = {
 }
 
 df = pd.DataFrame(data)
+
+
+
+internal4.write.mode('overwrite').parquet("../data/tables/full_join.parquet")

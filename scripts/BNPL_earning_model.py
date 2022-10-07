@@ -24,6 +24,7 @@ import seaborn as sns
 import matplotlib
 import matplotlib.pyplot as plt
 import ETL
+import outlier
 #==============================================================================
 
 # Create a spark session
@@ -52,7 +53,7 @@ tagged_merchants_sdf = tagged_merchants_sdf.withColumnRenamed('merchant_abn',
 
 # -----------------------------------------------------------------------------
 # Join the final dataset to the tagged model
-ETL.final_join3.createOrReplaceTempView("join")
+outlier.internal4.createOrReplaceTempView("join")
 tagged_merchants_sdf.createOrReplaceTempView("tagged")
 
 joint = spark.sql(""" 

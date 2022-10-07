@@ -208,15 +208,15 @@ urlretrieve(SA2_POSTCODE_URL, output_csv)
 # # SA2 TO POSTCODE (for visualisations) DATA DOWNLOAD
 # #============================================================================================
 # # Specify the url
-# SA2_POSTCODE_URL = "https://raw.githubusercontent.com/schappim/australian-postcodes/master/australian-postcodes.csv"
+SA2_POSTCODE_URL = "https://raw.githubusercontent.com/schappim/australian-postcodes/master/australian-postcodes.csv"
 
 # #--------------------------------------------------------------------------------------------
 # # Define the file names
-# output_csv = external_data_path + "visualisations_postcodes.csv"
+output_csv = external_data_path + "visualisations_postcodes.csv"
 
 # #--------------------------------------------------------------------------------------------
 # # Download the data
-# urlretrieve(SA2_POSTCODE_URL, output_csv) 
+urlretrieve(SA2_POSTCODE_URL, output_csv) 
 
 #============================================================================================
 # TRANSFORM
@@ -299,7 +299,8 @@ boundaries = boundaries[['SA2_CODE21', 'SA2_NAME21', 'STE_CODE21', 'STE_NAME21',
 # Renaming the columns
 new_columns = ['SA2_code', 'SA2_name', 'state_code', 'state_name', 'geometry']
 boundaries.columns = new_columns
-
+# Saving the cleaned dataset
+boundaries.to_file('../data/curated/boundaries.shp', driver='ESRI Shapefile')
 # Saving the cleaned dataset
 boundaries.to_csv("../data/curated/SA2_district_boundaries.csv")
 
@@ -491,5 +492,3 @@ SMALL_PROB = 0.01
 
 final_join3 = final_join3.fillna(SMALL_PROB, subset=["fraud_probability_merchant", "fraud_probability_consumer"])
 
-
-final_join3.write.mode('overwrite').parquet("../data/tables/full_join.parquet")

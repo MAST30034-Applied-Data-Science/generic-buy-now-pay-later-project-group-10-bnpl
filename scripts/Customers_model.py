@@ -1,16 +1,12 @@
-# -----------------------------------------------------------------------------
-# Import the libraries
 import pandas as pd
 from pyspark.sql import SparkSession, functions as F
+#==============================================================================
 import lbl2vec
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.cluster import KMeans
 import numpy as np
+from pyspark.sql.functions import max, lit
 from pyspark.sql.functions import date_format
-from pyspark.sql.functions import max
-from pyspark.sql.functions import lit
-from pyspark.sql.functions import year, month
-from pyspark.sql.functions import col,isnan, when, count
 import statsmodels.api as sm
 from statsmodels.formula.api import ols
 from pyspark.ml.feature import IndexToString, StringIndexer, VectorIndexer
@@ -18,19 +14,16 @@ from pyspark.ml.evaluation import MulticlassClassificationEvaluator
 from pyspark.ml.feature import OneHotEncoder, VectorAssembler
 from pyspark.ml.regression import RandomForestRegressor
 from pyspark.ml.evaluation import RegressionEvaluator
-from pyspark.sql.functions import year, month
-from pyspark.sql.functions import col,isnan, when, count
 from pyspark.sql.functions import col,isnan, when, count
 from pyspark.sql.functions import year, month
 import seaborn as sns
 import matplotlib
 import matplotlib.pyplot as plt
-import ETL
-
-# -----------------------------------------------------------------------------
+import outlier
+#==============================================================================
 # Create a spark session
 spark = (
-    SparkSession.builder.appName("MAST30034 Project 2")
+    SparkSession.builder.appName("MAST30034 Project 2 part 1")
     .config("spark.sql.repl.eagerEval.enabled", True) 
     .config("spark.sql.parquet.cacheMetadata", "true")
     .config("spark.sql.session.timeZone", "Etc/UTC")
@@ -46,15 +39,15 @@ spark = (
 tagged_merchants_sdf = spark.read.parquet("../data/curated/tagged_merchants.parquet")
 
 # -----------------------------------------------------------------------------
-# Join the final dataset to the tagged model
+# Rename the merchant column 
 tagged_merchants_sdf = tagged_merchants_sdf.withColumnRenamed('merchant_abn',
 
     'tagged_merchant_abn'
 )
 
 # -----------------------------------------------------------------------------
-# Calculate the BNPL earnings 
-ETL.final_join3.createOrReplaceTempView("join")
+# Join the final dataset to the tagged model
+outlier.internal4.createOrReplaceTempView("join")
 tagged_merchants_sdf.createOrReplaceTempView("tagged")
 
 joint = spark.sql(""" 
@@ -82,14 +75,15 @@ a = a.withColumn('Year', year(a.order_datetime))
 a = a.withColumn('Month',month(a.order_datetime))
 
 # -----------------------------------------------------------------------------
-# Dropping the redundant columns
-a = a.drop('merchant_abn', 'categories','name', 'address', 
-'trans_merchant_abn', 'order_id','order_datetime', 'consumer_id','int_sa2',
-'SA2_name','state_code','state_name','population_2020', 'population_2021')
+# Drop the unwanted columns
+a = a.drop('merchant_abn', 'categories','name', 'address', 'trans_merchant_abn', 
+'order_id','order_datetime', 'consumer_id','int_sa2', 'SA2_name','state_code',
+'state_name','population_2020', 'population_2021')
+ 
 
- # -----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Find Count of Null, None, NaN of All DataFrame Columns
-null_values = a.select([count(when(isnan(c) | col(c).isNull(), 
+a.select([count(when(isnan(c) | col(c).isNull(), 
 c)).alias(c) for c in a.columns])
 
 # -----------------------------------------------------------------------------
@@ -104,6 +98,7 @@ FROM agg
 WHERE gender = 'Male'
 GROUP BY merchant_name, SA2_code, Year, Month
 """)
+
 
 female = spark.sql(""" 
 
@@ -121,7 +116,7 @@ a.createOrReplaceTempView("agg")
 temp = spark.sql(""" 
 
 SELECT merchant_name, COUNT(DISTINCT user_id) AS no_of_customers, SA2_code, 
-    Year, Month, SUM(dollar_value - percent) AS total_earnings, 
+Year, Month, SUM(dollar_value - percent) AS total_earnings,
     CONCAT(merchant_name, SA2_code, Year, Month) AS join_col
 FROM agg 
 GROUP BY merchant_name, SA2_code, Year, Month
@@ -151,6 +146,7 @@ INNER JOIN f
 ON temp2.join_col = f.f_name
 """)
 
+
 # -----------------------------------------------------------------------------
 # Rename the column for better readability 
 a = a.withColumnRenamed('income_2018-2019',
@@ -173,7 +169,7 @@ e = spark.sql("""
 
 SELECT merchant_name AS drop_name, FIRST(take_rate) AS take_rate, 
     FIRST(revenue_levels) AS revenue_levels, FIRST(category) AS category,
-    FIRST(total_males) AS males_in_SA2, FIRST(total_females) AS females_in_SA2,
+    FIRST(total_males) AS males_in_SA2, FIRST(total_females) AS females_in_SA2, 
     FIRST(income_per_persons) AS income_per_person
 FROM features
 GROUP BY merchant_name
@@ -199,9 +195,10 @@ train = temp4.drop('m_name', 'f_name', 'drop_name','join_col')
 #==============================================================================
 # STEP 2: Prepare a train and test dataset by offsetting the months by 1
 #==============================================================================
+# ----------------------------------------------------------------------------
 # Select the main columns for offsetting
-train_projection = train.select("merchant_name", "SA2_code", "Year", "Month", 
-'BNPL_earnings')
+train_projection = train.select("merchant_name", "SA2_code", "Year", 
+"Month", 'no_of_customers')
 
 # ----------------------------------------------------------------------------
 # Offset the dataset by 1 month
@@ -210,19 +207,19 @@ train_projection = train.select("merchant_name", "SA2_code", "Year", "Month",
 train_projection = train_projection.withColumn("prev_year", \
               when(train_projection["Month"] == 1, 
               train_projection['Year'] - 1).otherwise(train_projection['Year']))
-
 train_projection = train_projection.withColumn("prev_month", \
-              when(train_projection["Month"] == 1, 
-              12).otherwise(train_projection['Month'] - 1))
+              when(train_projection["Month"] == 1, 12
+              ).otherwise(train_projection['Month'] - 1))
 
 # Drop the redundant columns
 train_projection = train_projection.drop("Year", "Month")
 
 # Renam the columns
-train_projection = train_projection.withColumnRenamed("BNPL_earnings", 
-                "future_earnings") \
-                .withColumnRenamed("merchant_name", "p_merchant_name") \
-                .withColumnRenamed("SA2_code", "p_SA2_code")
+train_projection = train_projection.withColumnRenamed("no_of_customers", 
+            "future_customers") \
+            .withColumnRenamed("merchant_name", 
+            "p_merchant_name") \
+            .withColumnRenamed("SA2_code", "p_SA2_code")
 
 # -----------------------------------------------------------------------------
 # Join the offsetted values to the rest of the SA2 and aggregated values
@@ -255,6 +252,17 @@ for col in field_int:
 #==============================================================================
 # String indexing the categorical columns
 
+field = ['future_customers','no_of_customers' ,'males', 'females', 
+        'males_in_SA2', 'females_in_SA2']
+
+for col in field:
+    final_data = final_data.withColumn(col,
+
+    F.col(col).cast('INT')
+
+)
+# String indexing the categorical columns
+
 indexer = StringIndexer(inputCols = ['merchant_name', 'SA2_code', 'Year', 
 'Month', 'revenue_levels','category'],
 outputCols = ['merchant_name_num', 'SA2_code_num', 'Year_num', 'Month_num', 
@@ -280,10 +288,11 @@ inputCols=['merchant_name_vec', 'SA2_code_vec', 'Year_vec', 'Month_vec',
 outputCol= "features" )
 
 outdata1 = assembler1.transform(onehotdata)
-
+# Renaming the target column as label
 
 # ----------------------------------------------------------------------------- 
 # Renaming the target column as label
+
 outdata1 = outdata1.withColumnRenamed(
     "future_customers",
     "label"
@@ -291,15 +300,16 @@ outdata1 = outdata1.withColumnRenamed(
 
 # ----------------------------------------------------------------------------- 
 # Assembling the features as a feature vector 
-
 featureIndexer =\
     VectorIndexer(inputCol="features", 
     outputCol="indexedFeatures").fit(outdata1)
 
 outdata1 = featureIndexer.transform(outdata1)
 
+
 # ----------------------------------------------------------------------------- 
 # Split the data into training and validation sets (30% held out for testing)
+
 trainingData, testData = outdata1.randomSplit([0.7, 0.3], seed = 20)
 
 # ----------------------------------------------------------------------------- 
@@ -316,18 +326,20 @@ predictions_validation = model.transform(testData)
 
 # ----------------------------------------------------------------------------- 
 # Evaluate the validation set 
+
 predictions_validation.select("prediction", "label", "features")
 
 # ----------------------------------------------------------------------------- 
 # Select (prediction, true label) and compute test error
+
 evaluator_train_rmse = RegressionEvaluator(
     labelCol="label", predictionCol="prediction", metricName="rmse")
-rmse_train_customers = evaluator_train_rmse.evaluate(predictions_validation)
-
+rmse_train = evaluator_train_rmse.evaluate(predictions_validation)
 
 evaluator_train_mae = RegressionEvaluator(
     labelCol="label", predictionCol="prediction", metricName="mae")
-mae_train_customers = evaluator_train_mae.evaluate(predictions_validation)
+mae_train = evaluator_train_mae.evaluate(predictions_validation)
+
 
 # ----------------------------------------------------------------------------- 
 # Define a function to extract important feature column names
@@ -335,17 +347,17 @@ def ExtractFeatureImportance(featureImp, dataset, featuresCol):
     list_extract = []
     for i in dataset.schema[featuresCol].metadata["ml_attr"]["attrs"]:
         list_extract = list_extract + dataset.schema[featuresCol
-                        ].metadata["ml_attr"]["attrs"][i]
+        ].metadata["ml_attr"]["attrs"][i]
     varlist = pd.DataFrame(list_extract)
     varlist['score'] = varlist['idx'].apply(lambda x: featureImp[x])
     return(varlist.sort_values('score', ascending = False))
   
-  # ----------------------------------------------------------------------------- 
+  # ---------------------------------------------------------------------------
 #ExtractFeatureImportance(model.stages[-1].featureImportances, dataset, 
 # "features")
-dataset_fi_customers = ExtractFeatureImportance(model.featureImportances, 
+dataset_fi = ExtractFeatureImportance(model.featureImportances, 
 predictions_validation, "features")
-dataset_fi_customers = spark.createDataFrame(dataset_fi_customers)
+dataset_fi = spark.createDataFrame(dataset_fi)
 
 # ----------------------------------------------------------------------------- 
 # Select the latest month from the latest year in the dataset which will be
@@ -370,6 +382,7 @@ outputCols = ['merchant_name_num', 'SA2_code_num', 'Year_num', 'Month_num',
 
 indexd_data = indexer.fit(predicting_data).transform(predicting_data)
 
+
 # Applying onehot encoding to the categorical data that is string indexed above
 encoder = OneHotEncoder(inputCols = ['merchant_name_num', 'SA2_code_num', 
 'Year_num', 'Month_num', 'revenue_levels_num','category_num'],
@@ -377,6 +390,7 @@ outputCols = ['merchant_name_vec', 'SA2_code_vec', 'Year_vec', 'Month_vec',
 'revenue_levels_vec','category_vec'])
 
 onehotdata = encoder.fit(indexd_data).transform(indexd_data)
+
 
 # Assembling the training data as a vector of features 
 assembler1 = VectorAssembler(
@@ -387,6 +401,7 @@ outputCol= "features" )
 
 outdata1 = assembler1.transform(onehotdata)
 
+# ----------------------------------------------------------------------------- 
 # Renaming the target column as label
 
 outdata1 = outdata1.withColumnRenamed(
@@ -396,15 +411,14 @@ outdata1 = outdata1.withColumnRenamed(
 
 # ----------------------------------------------------------------------------- 
 # Assembling the features as a feature vector 
-
 featureIndexer =\
     VectorIndexer(inputCol="features", 
     outputCol="indexedFeatures").fit(outdata1)
 
-# ----------------------------------------------------------------------------- 
-# Transform the data to make predictions
-outdata1 = featureIndexer.transform(outdata1)
 
+# ----------------------------------------------------------------------------- 
+# Transform the test data
+outdata1 = featureIndexer.transform(outdata1)
 predictions_test = model.transform(outdata1)
 
 # ----------------------------------------------------------------------------- 
@@ -419,9 +433,9 @@ FROM preds
 GROUP BY merchant_name
 
 """)
-# ----------------------------------------------------------------------------- 
-# Convert the predictions to a pandas dataframe and save as a csv file
+
+# -----------------------------------------------------------------------------  
+# Convert the predictions to a pandas dataframe and save as a csv
 pred_df = pred.toPandas()
 pred_df.to_csv("../data/curated/customers.csv")
-
 # ----------------------------------------------------------------------------- 
