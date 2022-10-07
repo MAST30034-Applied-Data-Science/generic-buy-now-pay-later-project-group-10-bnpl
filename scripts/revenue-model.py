@@ -68,7 +68,7 @@ joint = joint.drop('tagged_merchant_abn')
 joint.createOrReplaceTempView("group")
 
 main_data = spark.sql(""" 
-SELECT *, (dollar_value - take_rate) AS total_earning
+SELECT *, ((take_rate/100)*dollar_value) AS percent
 FROM group
 """)
 
@@ -82,7 +82,7 @@ main_data = main_data.withColumn('Month', month(main_data.order_datetime))
 main_data = main_data.drop('merchant_abn', 'categories','name', 'address', 
 'trans_merchant_abn', 'order_id','order_datetime','user_id','consumer_id',
 'int_sa2', 'SA2_name','state_code','state_name','population_2020', 
-'population_2021','total_earning')
+'population_2021')
 
 # -----------------------------------------------------------------------------
 # Find Count of Null, None, NaN of All DataFrame Columns
@@ -117,7 +117,7 @@ main_data.createOrReplaceTempView("agg")
 
 main_agg_data = spark.sql(""" 
 SELECT merchant_name, COUNT(merchant_name) AS no_of_transactions, SA2_code, 
-    Year, Month, SUM(dollar_value - take_rate) AS total_earnings, 
+    Year, Month, SUM(dollar_value - percent) AS total_earnings, 
     CONCAT(merchant_name, SA2_code, Year, Month) AS join_col
 FROM agg
 GROUP BY merchant_name, SA2_code, Year, Month
