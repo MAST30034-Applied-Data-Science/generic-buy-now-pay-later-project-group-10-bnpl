@@ -5,7 +5,7 @@ import pandas as pd
 
 # top 100 overall
 rank = pd.read_csv("../data/curated/final_rank.csv").drop(columns="Unnamed: 0.1")
-rank.columns = rank.columns.str.replace("Unnamed: 0", "rank")
+rank['rank'] = rank.index
 rank["total_revenue (in hundred)"] = rank["total_revenue"] / 100
 
 
