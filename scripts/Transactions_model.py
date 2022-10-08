@@ -12,6 +12,7 @@ from sklearn.linear_model import LinearRegression
 from sklearn.metrics import r2_score
 from sklearn.metrics import mean_squared_error
 from sklearn.metrics import mean_absolute_error
+import matplotlib.pyplot as plt
 #==============================================================================
 # Create a spark session
 #==============================================================================
@@ -171,9 +172,33 @@ index = False)
 # Calculating feature importance
 #==============================================================================
 importance = LR.coef_
+print(LR.feature_names_in_)
+print("test ends here")
 # summarize feature importance
 for i,v in enumerate(importance):
-    print('Feature: %0d, Score: %.5f' % (i,v))
+    print('Feature: %0d, Score: %.5f' % (i,v), LR.feature_names_in_[i])
+
 # plot feature importance
-pyplot.bar([x for x in range(len(importance))], importance)
-pyplot.show()
+plt.bar([x for x in range(len(importance))], importance)
+plt.show()
+
+##we are not getting the absolute value
+#feature_importance=pd.DataFrame({'feature':v.get_feature_names(),'feature_importance':LR.coef_[0]})
+#feature_importance.sort_values('feature_importance',ascending=False).head(10)
+
+
+
+
+#
+#importances = pd.DataFrame(data={
+#    'Attribute': x_train.columns,
+#    'Importance': LR.coef_
+#})
+#importances = importances.sort_values(by='Importance', ascending=False)
+#
+#plt.bar(x=importances['Attribute'], height=importances['Importance'], color='#087E8B')
+#plt.title('Feature importances obtained from coefficients', size=20)
+#plt.xticks(rotation='vertical')
+#plt.show()
+
+
