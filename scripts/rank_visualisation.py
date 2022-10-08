@@ -36,25 +36,25 @@ data.plot.barh(title=f"Top 5 merchants").legend(bbox_to_anchor=(1.01, 1), loc='u
 
 # Top 5 merchants in "Beauty, Health, Personal and Household"
 # make sure it is ordered by the rank 
-data = rank_category[0].sort_values("rank").reset_index(drop=True)
+data0 = rank_category[0].sort_values("rank").reset_index(drop=True)
 
 # category name
-category = data["category"][0]
+category = data0["category"][0]
 
 # calculate the average
-avg_rank = data.loc[:,["total_revenue (in hundred)", "total_future_customers", "total_earnings_of_BNPL", "total_future_transactions", "average_fraud_rate_per_merchant"]].mean()
-avg_rank["merchant_name"] = f"average of merchants in\n {category}"
+avg_rank0 = data0.loc[:,["total_revenue (in hundred)", "total_future_customers", "total_earnings_of_BNPL", "total_future_transactions", "average_fraud_rate_per_merchant"]].mean()
+avg_rank0["merchant_name"] = f"average of merchants in\n {category}"
 
 # top 5 wihtin the category
-data = data.loc[[4,3,2,1,0],["merchant_name", "total_revenue (in hundred)", "total_future_customers", "total_earnings_of_BNPL", "total_future_transactions", "average_fraud_rate_per_merchant"]]
+data0 = data0.loc[[4,3,2,1,0],["merchant_name", "total_revenue (in hundred)", "total_future_customers", "total_earnings_of_BNPL", "total_future_transactions", "average_fraud_rate_per_merchant"]]
 
 # add average of merchants with category "Beauty, Health, Personal and Household" with rank above 100
-data = data.append(avg_rank, ignore_index = True)
+data0 = data0.append(avg_rank0, ignore_index = True)
 
 # label by merchant name
-data = data.rename(columns={"merchant_name": "merchant"}).set_index("merchant")
+data0 = data0.rename(columns={"merchant_name": "merchant"}).set_index("merchant")
 
-data.plot.barh(title=f"Top 5 merchants in {category}").legend(bbox_to_anchor=(1.01, 1), loc='upper left', borderaxespad=0)
+data0.plot.barh(title=f"Top 5 merchants in {category}").legend(bbox_to_anchor=(1.01, 1), loc='upper left', borderaxespad=0)
 
 
 # Top 5 merchants in "Books, Stationary and Music"
