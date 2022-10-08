@@ -157,7 +157,7 @@ fig5, ax5 = plt.subplots(figsize=(12,7))
 sns.lineplot(data=trans_2022_df, x="Month", y="transactions_2022", 
 hue="category")
 ax5.set_ylabel("Number of transactions in 2022")
-ax4.set_title("Number of transactions per category in 2022")
+ax5.set_title("Number of transactions per category in 2022")
 plt.savefig("../plots/Transactions per category 2022.jpg",dpi=300, 
 bbox_inches='tight')
 #------------------------------------------------------------------------------
