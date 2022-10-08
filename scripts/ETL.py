@@ -492,3 +492,4 @@ SMALL_PROB = 0.01
 
 final_join3 = final_join3.fillna(SMALL_PROB, subset=["fraud_probability_merchant", "fraud_probability_consumer"])
 
+

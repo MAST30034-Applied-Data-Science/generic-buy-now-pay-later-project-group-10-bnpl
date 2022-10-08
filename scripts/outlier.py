@@ -19,6 +19,7 @@ spark = (
 ### REMOVE OUTLIERS as detected in outlier analysis notebook
 #------------------------------------------------------------------------------
 # Excluding transactions with no merchants
+
 internal1 = ETL.final_join3.filter("merchant_abn IS NOT NULL")
 
 # Excluding transactions with $0
@@ -42,4 +43,4 @@ df = pd.DataFrame(data)
 
 
 
-internal4.write.mode('overwrite').parquet("../data/tables/full_join.parquet")
+internal4.write.parquet("../data/tables/full_join.parquet")
