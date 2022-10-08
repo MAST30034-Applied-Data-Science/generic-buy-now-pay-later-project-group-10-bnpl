@@ -340,6 +340,13 @@ evaluator_train_mae = RegressionEvaluator(
     labelCol="label", predictionCol="prediction", metricName="mae")
 mae_train_revenue = evaluator_train_mae.evaluate(predictions_validation)
 
+revenue_metrics = {
+    'RMSE': [rmse_train_revenue],
+    'MAE': [mae_train_revenue]
+}
+
+revenue_metrics_df = pd.DataFrame(revenue_metrics)
+revenue_metrics_df.to_csv("../data/curated/revenue_metrics.csv")
 
 
 # ----------------------------------------------------------------------------- 
@@ -359,7 +366,8 @@ def ExtractFeatureImportance(featureImp, dataset, featuresCol):
 dataset_fi = ExtractFeatureImportance(model.featureImportances, 
 predictions_validation, "features")
 dataset_fi_revenue = spark.createDataFrame(dataset_fi)
-
+dataset_fi_revenue_df = dataset_fi_revenue.toPandas()
+dataset_fi_revenue_df.to_csv("../data/curated/revenue_features.csv")
 
 # ----------------------------------------------------------------------------- 
 # Select the latest month from the latest year in the dataset which will be

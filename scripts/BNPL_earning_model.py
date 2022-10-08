@@ -329,6 +329,14 @@ evaluator_train_mae = RegressionEvaluator(
     labelCol="label", predictionCol="prediction", metricName="mae")
 mae_train = evaluator_train_mae.evaluate(predictions_validation)
 
+BNPL_metrics = {
+    'RMSE': [rmse_train],
+    'MAE': [mae_train]
+}
+
+BNPL_metrics_df = pd.DataFrame(BNPL_metrics)
+BNPL_metrics_df.to_csv("../data/curated/BNPL_metrics.csv")
+
 # ----------------------------------------------------------------------------- 
 # Define a function to extract important feature column names
 def ExtractFeatureImportance(featureImp, dataset, featuresCol):
@@ -346,6 +354,8 @@ def ExtractFeatureImportance(featureImp, dataset, featuresCol):
 dataset_fi = ExtractFeatureImportance(model.featureImportances, 
 predictions_validation, "features")
 dataset_fi = spark.createDataFrame(dataset_fi)
+dataset_fi_BNPL_df = dataset_fi.toPandas()
+dataset_fi_BNPL_df.to_csv("../data/curated/BNPL_features.csv")
 
 # ----------------------------------------------------------------------------- 
 # Select the latest month from the latest year in the dataset which will be

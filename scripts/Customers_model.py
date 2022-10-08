@@ -340,7 +340,13 @@ evaluator_train_mae_customer = RegressionEvaluator(
     labelCol="label", predictionCol="prediction", metricName="mae")
 mae_train_customer = evaluator_train_mae_customer.evaluate(predictions_validation_customer)
 
+customer_metrics = {
+    'RMSE': [rmse_train_customer],
+    'MAE': [mae_train_customer]
+}
 
+customer_metrics_df = pd.DataFrame(customer_metrics)
+customer_metrics_df.to_csv("../data/curated/customer_metrics.csv")
 # ----------------------------------------------------------------------------- 
 # Define a function to extract important feature column names
 def ExtractFeatureImportance(featureImp, dataset, featuresCol):
@@ -359,6 +365,8 @@ dataset_fi_customer = ExtractFeatureImportance(model_customer.featureImportances
 predictions_validation_customer, "features")
 dataset_fi_customer = spark.createDataFrame(dataset_fi_customer)
 
+dataset_fi_customer_df = dataset_fi_customer.toPandas()
+dataset_fi_customer_df.to_csv("../data/curated/customer_features.csv")
 # ----------------------------------------------------------------------------- 
 # Select the latest month from the latest year in the dataset which will be
 # used as a test set for future predictions due to the offsetting done 
