@@ -120,7 +120,7 @@ data = data.append(avg_rank, ignore_index = True)
 # label by merchant name
 data = data.rename(columns={"merchant_name": "merchant"}).set_index("merchant")
 
-data.plot.barh(title=f"Top 5 merchants in {category}")
+data.plot.barh(title=f"Top 5 merchants in {category}").legend(bbox_to_anchor=(1.01, 1), loc='upper left', borderaxespad=0)
 
 
 # Top 5 merchants in "Toys and DIY"
@@ -142,4 +142,4 @@ data = data.append(avg_rank, ignore_index = True)
 # label by merchant name
 data = data.rename(columns={"merchant_name": "merchant"}).set_index("merchant")
 
-data.plot.barh(title=f"Top 5 merchants in {category}")
+data.plot.barh(title=f"Top 5 merchants in {category}").legend(bbox_to_anchor=(1.01, 1), loc='upper left', borderaxespad=0)
