@@ -11,7 +11,7 @@ weights = list(sys.argv[1].split(','))
 #==============================================================================
 # READING IN DATA
 #==============================================================================
-# fraud = pd.read_parquet("../data/curated/transactions_with_fraud_rates.parquet")
+fraud = pd.read_parquet("../data/tables/avg_fraud_rate_per_merchant.parquet")
 transactions = pd.read_csv("../data/curated/no_cust_ranking_feature.csv")
 bnpl_earnings = pd.read_csv("../data/curated/BNPL_earnings.csv")
 revenue = pd.read_csv("../data/curated/revenue.csv")
@@ -24,7 +24,7 @@ revenue = revenue[['merchant_name', 'total_revenue']]
 tags = tags[['name', 'merchant_abn', 'category']]
 tags = tags.rename(columns={'name': 'merchant_name'})
 transactions = transactions.rename(columns={'prediction': 'total_future_transactions'})
-# fraud['merchant_abn'] = fraud['merchant_abn'].astype('int')
+
 
 tags_trans = pd.merge(tags, transactions, on=['merchant_abn','merchant_name'],
 how='inner')
@@ -33,19 +33,19 @@ how='inner')
 add_revenue = pd.merge(add_customers, revenue, on ='merchant_name', 
 how='inner')
 add_bnpl = pd.merge(add_revenue, bnpl_earnings, on ='merchant_name')
-# final = pd.merge(add_revenue, fraud, on ='merchant_abn', how='inner')
-
+final = pd.merge(add_bnpl, fraud, on ='merchant_abn', how='inner')
 
 #==============================================================================
 # NORMALISE DATA
 #==============================================================================
 # copy the data
 
-final = add_bnpl
+normalised = final.copy()
+
 for feature in ['total_future_customers', 'total_revenue', 'total_earnings_of_BNPL',
-               'total_future_transactions']:
-    final[feature] = (final[feature] - final[feature].min()) / (final[feature
-                                                ].max() - final[feature].min())    
+               'total_future_transactions', 'average_fraud_rate_per_merchant']:
+    normalised[feature] = (normalised[feature] - normalised[feature].min()) \
+                        / (normalised[feature].max() - normalised[feature].min())    
 
 
 #------------------------------------------------------------------------------
@@ -56,11 +56,11 @@ revenue_weights = int(weights[2])
 customer_weights = int(weights[3])
 bnpl_weights = int(weights[4])
 
-final['ranking_feature'] = transactions_weights*final['total_future_transactions'] + \
-                                revenue_weights*final['total_revenue'] + \
-                                customer_weights*final['total_future_customers'] + \
-                                bnpl_weights*final['total_earnings_of_BNPL']
-                                # fraud_weights*final['average fraud rate per merchant']
+normalised['ranking_feature'] = transactions_weights*normalised['total_future_transactions'] + \
+                                revenue_weights*normalised['total_revenue'] + \
+                                customer_weights*normalised['total_future_customers'] + \
+                                bnpl_weights*normalised['total_earnings_of_BNPL'] + \
+                                -1*fraud_weights*normalised['average_fraud_rate_per_merchant']
 
 #------------------------------------------------------------------------------
 # splitting by tags for top 10 merchants
@@ -68,7 +68,7 @@ tags = tags_trans.category.unique()
 
 for tag in tags:
     print("Ranking for ", tag, "category: ")
-    df = final.query("category == @tag")
+    df = normalised.query("category == @tag")
     print("Number of merchants in this category: ",len(df))
     
     df = df.sort_values(by='ranking_feature', ascending=False)
@@ -77,9 +77,10 @@ for tag in tags:
     for i in range(10):
         print("Rank ", i+1, ": ", merchant_rank[i])
     print("\n")
-    
+
 #------------------------------------------------------------------------------
 # top 100 merchants
+final['ranking_feature'] = normalised['ranking_feature']
 final_rank = final.sort_values(by='ranking_feature', ascending=False)
 final_rank = final_rank.head(100)
 final_rank = final_rank.reset_index(drop = True)

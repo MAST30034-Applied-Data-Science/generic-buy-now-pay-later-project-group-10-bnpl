@@ -16,7 +16,7 @@ from sklearn.metrics import mean_absolute_error
 # Create a spark session
 #==============================================================================
 spark = (
-    SparkSession.builder.appName("MAST30034 Project 2")
+    SparkSession.builder.appName("MAST30034 Project 10")
     .config("spark.sql.repl.eagerEval.enabled", True) 
     .config("spark.sql.parquet.cacheMetadata", "true")
     .config("spark.sql.session.timeZone", "Etc/UTC")
@@ -28,7 +28,7 @@ spark = (
 #==============================================================================
 # Read in data
 #==============================================================================
-data = spark.read.parquet("../data/tables/full_join.parquet")
+data = spark.read.parquet("../data/curated/full_join.parquet")
 
 #==============================================================================
 # Aggregate data by merchant by month
@@ -120,8 +120,8 @@ final_data = final_data.drop("p_merchant_name", "p_merchant_abn",
 final_data_pd = final_data.toPandas()
 
 y = final_data_pd['future_count']
-x = final_data_pd.drop(['merchant_name', 'merchant_abn', 'categories', 'null', 
-'null', 'future_count'], axis=1)
+x = final_data_pd.drop(['merchant_name', 'merchant_abn', 'categories', 
+'future_count'], axis=1)
 
 x_train, x_test, y_train, y_test = train_test_split(x, y, test_size = 0.2, 
 random_state = 42)
@@ -154,7 +154,7 @@ predicting_data = predicting_data.withColumn("future_count", lit(0))
 #------------------------------------------------------------------------------
 predicting_data_pd = predicting_data.toPandas()
 x = predicting_data_pd.drop(['merchant_name', 'merchant_abn', 'categories', 
-    'null', 'null', 'future_count'], axis=1)
+'future_count'], axis=1)
 
 # Obtain predictions for future number of transactions
 y_prediction =  LR.predict(x)

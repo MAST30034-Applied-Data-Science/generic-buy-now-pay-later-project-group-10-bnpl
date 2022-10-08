@@ -23,12 +23,11 @@ from pyspark.sql.functions import col,isnan, when, count
 import seaborn as sns
 import matplotlib
 import matplotlib.pyplot as plt
-import ETL
 #==============================================================================
 
 # Create a spark session
 spark = (
-    SparkSession.builder.appName("MAST30034 Project 2")
+    SparkSession.builder.appName("MAST30034 Project 2 part 9")
     .config("spark.sql.repl.eagerEval.enabled", True) 
     .config("spark.sql.parquet.cacheMetadata", "true")
     .config("spark.sql.session.timeZone", "Etc/UTC")
@@ -37,9 +36,11 @@ spark = (
     .getOrCreate()
 )
 
+
 #==============================================================================
 # STEP 1: Prepare the main dataset
 #==============================================================================
+full_join = spark.read.parquet("../data/curated/full_join.parquet")
 # Read the tagged model
 tagged_merchants_sdf = spark.read.parquet("../data/curated/tagged_merchants.parquet")
 
@@ -52,7 +53,7 @@ tagged_merchants_sdf = tagged_merchants_sdf.withColumnRenamed('merchant_abn',
 
 # -----------------------------------------------------------------------------
 # Join the final dataset to the tagged model
-ETL.final_join3.createOrReplaceTempView("join")
+full_join.createOrReplaceTempView("join")
 tagged_merchants_sdf.createOrReplaceTempView("tagged")
 
 joint = spark.sql(""" 
@@ -73,6 +74,7 @@ main_data = spark.sql("""
 SELECT *, ((take_rate/100)*dollar_value) AS BNPL_earnings
 FROM group
 """)
+
 
 # -----------------------------------------------------------------------------
 # Extracting the year, month, day from the timestamp
@@ -150,6 +152,7 @@ INNER JOIN f
 ON temp2.join_col = f.f_name
 """)
 
+
 # -----------------------------------------------------------------------------
 # Rename the column for better readability 
 main_data = main_data.withColumnRenamed('income_2018-2019',
@@ -194,7 +197,6 @@ ON edit.merchant_name = rates.drop_name
 # -----------------------------------------------------------------------------
 # Drop the redundant columns
 train = temp4.drop('m_name', 'f_name', 'drop_name','join_col')
-
 #==============================================================================
 # STEP 2: Prepare a train and test dataset by offsetting the months by 1
 #==============================================================================
@@ -250,6 +252,7 @@ field_int = ['no_of_transactions', 'males', 'females', 'males_in_SA2',
 for col in field_int:
     final_data = final_data.withColumn(col, F.col(col).cast('INT'))
 
+
 #==============================================================================
 # STEP 3: Build and train the Random Forrest Model
 #==============================================================================
@@ -302,6 +305,7 @@ outdata1 = featureIndexer.transform(outdata1)
 # Split the data into training and validation sets (30% held out for testing)
 trainingData, testData = outdata1.randomSplit([0.7, 0.3], seed = 20)
 
+
 # ----------------------------------------------------------------------------- 
 # Train a RandomForest model.
 rf = RandomForestRegressor(featuresCol="indexedFeatures")
@@ -353,6 +357,18 @@ agg_month_1 = train.filter(train.Year == latest_year)
 latest_month = agg_month_1.select(max('Month')).collect()[0][0]
 predicting_data = agg_month_1.filter(train.Month == latest_month)
 predicting_data = predicting_data.withColumn("future_earnings", lit(0))
+# Change the variable types
+field_str = ['Year', 'Month', 'SA2_code']
+
+for cols in field_str:
+    predicting_data = predicting_data.withColumn(cols,F.col(cols).cast('STRING'))
+
+field_int = ['no_of_transactions', 'males', 'females', 'males_in_SA2', 
+'females_in_SA2']
+
+for col in field_int:
+    predicting_data = predicting_data.withColumn(col, F.col(col).cast('INT'))
+
 
 #==============================================================================
 # STEP 4: Make future predictions
@@ -404,7 +420,6 @@ featureIndexer =\
 outdata1 = featureIndexer.transform(outdata1)
 
 predictions_test = model.transform(outdata1)
-
 # ----------------------------------------------------------------------------- 
 # Aggregate the predictions to merchant level to get the predicted BNPL 
 # earnings from each merchant

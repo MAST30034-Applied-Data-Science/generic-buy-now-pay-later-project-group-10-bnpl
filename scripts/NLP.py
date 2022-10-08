@@ -12,7 +12,7 @@ from sklearn.decomposition import LatentDirichletAllocation
 
 # Create a spark session
 spark = (
-    SparkSession.builder.appName("MAST30034 Project 2")
+    SparkSession.builder.appName("MAST30034 Project 2 part 5")
     .config("spark.sql.repl.eagerEval.enabled", True) 
     .config("spark.sql.parquet.cacheMetadata", "true")
     .config("spark.sql.session.timeZone", "Etc/UTC")
@@ -22,11 +22,11 @@ spark = (
 
 # -----------------------------------------------------------------------------
 # Read the consumer data
-consumer = pd.read_csv("/..data/tables/tbl_consumer.csv", delimiter="|")
+consumer = pd.read_csv("../data/tables/tbl_consumer.csv", delimiter="|")
 
 # -----------------------------------------------------------------------------
 # Read the merchant data
-merchants = spark.read.parquet("/../data/tables/tbl_merchants.parquet")
+merchants = spark.read.parquet("../data/tables/tbl_merchants.parquet")
 
 # -----------------------------------------------------------------------------
 # Convert the merchant data to a pandas dataframe
@@ -61,7 +61,7 @@ categories_label = ["fashion", "furniture", "electronics",
 LDA = LatentDirichletAllocation(n_components=5,random_state=42)
 LDA.fit(dtm)
 for index,topic in enumerate(LDA.components_):
-    print(f'THE TOP 15 WORDS FOR TOPIC #{index}')
+    print(f'THE TOP 15 WORDS FOR TOPIC #{categories_label[index].upper()}')
     print([cv.get_feature_names()[i] for i in topic.argsort()[-15:]])
     print('\n')
 
