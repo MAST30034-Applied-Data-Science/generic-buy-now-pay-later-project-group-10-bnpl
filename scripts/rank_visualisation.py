@@ -59,87 +59,87 @@ data.plot.barh(title=f"Top 5 merchants in {category}").legend(bbox_to_anchor=(1.
 
 # Top 5 merchants in "Books, Stationary and Music"
 # make sure it is ordered by the rank 
-data = rank_category[1].sort_values("rank").reset_index(drop=True)
+data1 = rank_category[1].sort_values("rank").reset_index(drop=True)
 
 # category name
-category = data["category"][0]
+category = data1["category"][0]
 
 # calculate the average
-avg_rank = data.loc[:,["total_revenue (in hundred)", "total_future_customers", "total_earnings_of_BNPL", "total_future_transactions", "average_fraud_rate_per_merchant"]].mean()
-avg_rank["merchant_name"] = f"average of merchants in\n {category}"
+avg_rank1 = data1.loc[:,["total_revenue (in hundred)", "total_future_customers", "total_earnings_of_BNPL", "total_future_transactions", "average_fraud_rate_per_merchant"]].mean()
+avg_rank1["merchant_name"] = f"average of merchants in\n {category}"
 
-data = data.loc[[4,3,2,1,0],["merchant_name", "total_revenue (in hundred)", "total_future_customers", "total_earnings_of_BNPL", "total_future_transactions", "average_fraud_rate_per_merchant"]]
+data1 = data1.loc[[4,3,2,1,0],["merchant_name", "total_revenue (in hundred)", "total_future_customers", "total_earnings_of_BNPL", "total_future_transactions", "average_fraud_rate_per_merchant"]]
 
 # add average of merchants with category "Books, Stationary and Music" with rank above 100
-data = data.append(avg_rank, ignore_index = True)
+data1 = data1.append(avg_rank1, ignore_index = True)
 
 # label by merchant name
-data = data.rename(columns={"merchant_name": "merchant"}).set_index("merchant")
+data1 = data1.rename(columns={"merchant_name": "merchant"}).set_index("merchant")
 
-data.plot.barh(title=f"Top 5 merchants in {category}").legend(bbox_to_anchor=(1.01, 1), loc='upper left', borderaxespad=0)
+data1.plot.barh(title=f"Top 5 merchants in {category}").legend(bbox_to_anchor=(1.01, 1), loc='upper left', borderaxespad=0)
 
 
 # Top 5 merchants in "Electronics"
 # make sure it is ordered by the rank 
-data = rank_category[2].sort_values("rank").reset_index(drop=True)
+data2 = rank_category[2].sort_values("rank").reset_index(drop=True)
 
 # category name
-category = data["category"][0]
+category = data2["category"][0]
 
 # calculate the average
-avg_rank = data.loc[:,["total_revenue (in hundred)", "total_future_customers", "total_earnings_of_BNPL", "total_future_transactions", "average_fraud_rate_per_merchant"]].mean()
-avg_rank["merchant_name"] = f"average of merchants in\n {category}"
+avg_rank2 = data2.loc[:,["total_revenue (in hundred)", "total_future_customers", "total_earnings_of_BNPL", "total_future_transactions", "average_fraud_rate_per_merchant"]].mean()
+avg_rank2["merchant_name"] = f"average of merchants in\n {category}"
 
-data = data.loc[[4,3,2,1,0],["merchant_name", "total_revenue (in hundred)", "total_future_customers", "total_earnings_of_BNPL", "total_future_transactions", "average_fraud_rate_per_merchant"]]
+data2 = data2.loc[[4,3,2,1,0],["merchant_name", "total_revenue (in hundred)", "total_future_customers", "total_earnings_of_BNPL", "total_future_transactions", "average_fraud_rate_per_merchant"]]
 
 # add average of merchants with category "Electronics" with rank above 100
-data = data.append(avg_rank, ignore_index = True)
+data2 = data2.append(avg_rank2, ignore_index = True)
 
 # label by merchant name
-data = data.rename(columns={"merchant_name": "merchant"}).set_index("merchant")
+data2 = data2.rename(columns={"merchant_name": "merchant"}).set_index("merchant")
 
-data.plot.barh(title=f"Top 5 merchants in {category}").legend(bbox_to_anchor=(1.01, 1), loc='upper left', borderaxespad=0)
+data2.plot.barh(title=f"Top 5 merchants in {category}").legend(bbox_to_anchor=(1.01, 1), loc='upper left', borderaxespad=0)
 
 
 # Top 5 merchants in "Furniture"
 # make sure it is ordered by the rank 
-data = rank_category[3].sort_values("rank").reset_index(drop=True)
+data3 = rank_category[3].sort_values("rank").reset_index(drop=True)
 
 # category name
-category = data["category"][0]
+category = data3["category"][0]
 
 # calculate the average
-avg_rank = data.loc[:,["total_revenue (in hundred)", "total_future_customers", "total_earnings_of_BNPL", "total_future_transactions", "average_fraud_rate_per_merchant"]].mean()
-avg_rank["merchant_name"] = f"average of merchants in\n {category}"
+avg_rank3 = data3.loc[:,["total_revenue (in hundred)", "total_future_customers", "total_earnings_of_BNPL", "total_future_transactions", "average_fraud_rate_per_merchant"]].mean()
+avg_rank3["merchant_name"] = f"average of merchants in\n {category}"
 
-data = data.loc[[4,3,2,1,0],["merchant_name", "total_revenue (in hundred)", "total_future_customers", "total_earnings_of_BNPL", "total_future_transactions", "average_fraud_rate_per_merchant"]]
+data3 = data3.loc[[4,3,2,1,0],["merchant_name", "total_revenue (in hundred)", "total_future_customers", "total_earnings_of_BNPL", "total_future_transactions", "average_fraud_rate_per_merchant"]]
 
 # add average of merchants with category "Furniture" with rank above 100
-data = data.append(avg_rank, ignore_index = True)
+data3 = data3.append(avg_rank3, ignore_index = True)
 
 # label by merchant name
-data = data.rename(columns={"merchant_name": "merchant"}).set_index("merchant")
+data3 = data3.rename(columns={"merchant_name": "merchant"}).set_index("merchant")
 
-data.plot.barh(title=f"Top 5 merchants in {category}").legend(bbox_to_anchor=(1.01, 1), loc='upper left', borderaxespad=0)
+data3.plot.barh(title=f"Top 5 merchants in {category}").legend(bbox_to_anchor=(1.01, 1), loc='upper left', borderaxespad=0)
 
 
 # Top 5 merchants in "Toys and DIY"
 # make sure it is ordered by the rank 
-data = rank_category[4].sort_values("rank").reset_index(drop=True)
+data4 = rank_category[4].sort_values("rank").reset_index(drop=True)
 
 # category name
-category = data["category"][0]
+category = data4["category"][0]
 
 # calculate the average
-avg_rank = data.loc[:,["total_revenue (in hundred)", "total_future_customers", "total_earnings_of_BNPL", "total_future_transactions", "average_fraud_rate_per_merchant"]].mean()
-avg_rank["merchant_name"] = f"average of merchants in\n {category}"
+avg_rank4 = data4.loc[:,["total_revenue (in hundred)", "total_future_customers", "total_earnings_of_BNPL", "total_future_transactions", "average_fraud_rate_per_merchant"]].mean()
+avg_rank4["merchant_name"] = f"average of merchants in\n {category}"
 
-data = data.loc[[4,3,2,1,0],["merchant_name", "total_revenue (in hundred)", "total_future_customers", "total_earnings_of_BNPL", "total_future_transactions", "average_fraud_rate_per_merchant"]]
+data4 = data4.loc[[4,3,2,1,0],["merchant_name", "total_revenue (in hundred)", "total_future_customers", "total_earnings_of_BNPL", "total_future_transactions", "average_fraud_rate_per_merchant"]]
 
 # add average of merchants with category "Toys and DIY" with rank above 100
-data = data.append(avg_rank, ignore_index = True)
+data4 = data4.append(avg_rank4, ignore_index = True)
 
 # label by merchant name
-data = data.rename(columns={"merchant_name": "merchant"}).set_index("merchant")
+data4 = data4.rename(columns={"merchant_name": "merchant"}).set_index("merchant")
 
-data.plot.barh(title=f"Top 5 merchants in {category}").legend(bbox_to_anchor=(1.01, 1), loc='upper left', borderaxespad=0)
+data4.plot.barh(title=f"Top 5 merchants in {category}").legend(bbox_to_anchor=(1.01, 1), loc='upper left', borderaxespad=0)
