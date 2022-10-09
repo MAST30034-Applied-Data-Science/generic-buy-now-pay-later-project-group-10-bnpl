@@ -9,32 +9,27 @@ The following questions are investigated:
 2. What features or heuristics did you discover that greatly separated merchants that should and shouldn’t be accepted?
 
 ### Datasets
-All data is downloaded in the `./data` folder and curated / transformed data is saved in the `./data/curated` folder.
-Read the `README.md` located in `./data/README.md` for details.
+All data is downloaded in the `../data` folder and curated / transformed data is saved in the `./data/curated` folder.
+Read the `README.md` located in `../data/README.md` for details.
 
 ### Installations
-
+Run the requirements.txt for a pip installation. 
 
 ### How to run the project
-To run the pipeline, visit `./notebook/final_summary.ipynb` and run the cells in order.
+To run the pipeline, visit `../notebook/final_summary.ipynb` and run the cells in order.
+
+### File directory
+File name: location of the directory
+
+- Jupyter Notebooks: `../notebooks`
+- `.py` scripts: `../scripts`
+- Raw data: `../data`
+- Curated / transformed data: `../data/curated` (these are regenerated after running a code)
+- Plots: `../plots`
 
 
 ### Authors
 
-MAST30034 Group 10
-
+MAST30034 Group 10:
 Aishwarya Hirve, Aoi Fujii, Arshnoor Kaur, Hannah Chin, Kasturi Deshpande
 
-
-
-
-
-
-
-========================
-Check the requirement, run the whole code in a new environment, commenting
-
-
-Note to groups: Make sure to read the `README.md` located in `./data/README.md` for details on how the weekly datasets will be released.
-
-Required packages and their correct versions can be found in the requirements.txt file 
