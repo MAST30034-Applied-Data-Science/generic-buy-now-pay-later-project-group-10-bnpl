@@ -5,7 +5,7 @@ from pyspark.sql import functions as F
 from pyspark.sql.functions import when
 from pyspark.sql import SparkSession
 from pyspark.sql import functions as countDistinct
-
+import matplotlib.pyplot as plt
 #============================================================================================
 # Create a spark session
 #============================================================================================
@@ -26,7 +26,6 @@ full_data = spark.read.parquet("../data/curated/full_join.parquet")
 
 fraud_dataset = fraud_dataset.select("average_fraud_rate_per_merchant"
                                      ,"merchant_abn").withColumnRenamed("order_id","tags_order_id")
-print(fraud_dataset.limit(5))
 
 order_data = full_data.select("trans_merchant_abn","order_id")
 tags_data = spark.read.parquet("../data/curated/tagged_merchants.parquet")
@@ -68,4 +67,9 @@ ON temp.merchant_abn = temp2.tags_merchant_abn
 aggregated_fraud_by_category = tags_vs_segment_data.groupBy("category").agg(F.avg("average_fraud_rate_per_merchant").alias("fraud_rate_per_category"))
 
 aggregated_fraud_by_category_pdf = aggregated_fraud_by_category.toPandas()
+
 ax = aggregated_fraud_by_category_pdf.plot.bar(x='category', y='fraud_rate_per_category')
+ax.ticklabel_format(style='plain', axis='y')
+ax.set_xlabel("Merchant category")
+ax.set_title("Average fraud rate per Merchabnt")
+plt.savefig("../plots/fraud.jpg", bbox_inches="tight")
