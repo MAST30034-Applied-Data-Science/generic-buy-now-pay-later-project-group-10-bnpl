@@ -53,7 +53,8 @@ external_data_path = PATHS['external_data_path']
 #==============================================================================
 full_join = spark.read.parquet(curated_data_path + "full_join.parquet")
 # Read the tagged model
-tagged_merchants_sdf = spark.read.parquet(curated_data_path + "tagged_merchants.parquet")
+tagged_merchants_sdf = spark.read.parquet(
+    curated_data_path + "tagged_merchants.parquet")
 
 # -----------------------------------------------------------------------------
 # Rename the merchant column 
@@ -222,7 +223,8 @@ train_projection = train.select("merchant_name", "SA2_code", "Year", "Month",
 # Offset the year by 1 if the month if the first month
 train_projection = train_projection.withColumn("prev_year", \
               when(train_projection["Month"] == 1, 
-              train_projection['Year'] - 1).otherwise(train_projection['Year']))
+              train_projection['Year'] - 1).otherwise(
+                train_projection['Year']))
 
 train_projection = train_projection.withColumn("prev_month", \
               when(train_projection["Month"] == 1, 
@@ -382,7 +384,8 @@ predicting_data = predicting_data.withColumn("future_earnings", lit(0))
 field_str = ['Year', 'Month', 'SA2_code']
 
 for cols in field_str:
-    predicting_data = predicting_data.withColumn(cols,F.col(cols).cast('STRING'))
+    predicting_data = predicting_data.withColumn(cols,
+    F.col(cols).cast('STRING'))
 
 field_int = ['no_of_transactions', 'males', 'females', 'males_in_SA2', 
 'females_in_SA2']

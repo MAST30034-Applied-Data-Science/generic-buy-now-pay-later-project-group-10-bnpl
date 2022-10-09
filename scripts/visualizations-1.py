@@ -47,13 +47,15 @@ sns.countplot(data=genderspd, x="gender")
 ax1.ticklabel_format(style='plain', axis='y')
 ax1.set_xlabel("Gender")
 ax1.set_title("Number of transactions per gender")
-plt.savefig(visualisation_path + "Gender transactions.jpg",dpi=300, bbox_inches='tight')
+plt.savefig(visualisation_path + "Gender transactions.jpg",dpi=300, 
+bbox_inches='tight')
 
 #------------------------------------------------------------------------------
 # Distribution of total revenue for each merchant from online purchases
 #print("The distribution of total revenue across all the merchants")
 selected_columns = outlier.internal4.select("merchant_abn","dollar_value")
-aggregated_revenue = selected_columns.groupby("merchant_abn").sum("dollar_value")
+aggregated_revenue = selected_columns.groupby("merchant_abn").sum(
+    "dollar_value")
 aggregated_revenue_pd = aggregated_revenue.toPandas()
 total_revenue = aggregated_revenue_pd['sum(dollar_value)']
 
@@ -61,7 +63,8 @@ fig2, ax2 = plt.subplots(figsize=(12,7))
 sns.boxplot(total_revenue)
 ax2.set_xlabel("Total revenue per merchant")
 ax2.set_title("Distribution of merchant revenue")
-plt.savefig(visualisation_path + "Revenue distribution.jpg",dpi=300, bbox_inches='tight')
+plt.savefig(visualisation_path + "Revenue distribution.jpg",dpi=300, 
+bbox_inches='tight')
 
 #------------------------------------------------------------------------------
 # Distributions of transactions by state
@@ -74,13 +77,15 @@ sns.countplot(data=statepd, x="state")
 ax3.ticklabel_format(style='plain', axis='y')
 ax3.set_xlabel("State")
 ax3.set_title("Number of transactions per Victorian state")
-plt.savefig(visualisation_path + "Transactions per state.jpg",dpi=300, bbox_inches='tight')
+plt.savefig(visualisation_path + "Transactions per state.jpg",dpi=300, 
+bbox_inches='tight')
 
 #------------------------------------------------------------------------------
 # Number of transactions made per month
 
 # Read the tagged model
-tagged_merchants_sdf = spark.read.parquet(curated_data_path + "tagged_merchants.parquet")
+tagged_merchants_sdf = spark.read.parquet(
+    curated_data_path + "tagged_merchants.parquet")
 
 # -----------------------------------------------------------------------------
 # Join the final dataset to the tagged model
@@ -308,7 +313,8 @@ bbox_inches='tight')
 
 #------------------------------------------------------------------------------
 # Geospatial visualizations of number of transactions by post code
-num_transactions_by_postcode = ETL.final_join3.groupBy(['postcodes', 'suburb', 'long', 'lat']).count()
+num_transactions_by_postcode = ETL.final_join3.groupBy(['postcodes', 'suburb', 
+'long', 'lat']).count()
 # conver transactions location to pandas df
 num_transactions_by_postcode_pdf = num_transactions_by_postcode.toPandas()
 
@@ -355,16 +361,20 @@ gdf['SA2_code'] = gdf['SA2_code'].astype(int)
 geoJSON = gdf[['SA2_code', 'geometry']].drop_duplicates('SA2_code').to_json()
 ### Locations of fraudulent consumers
 # aggregate data by postcode and consumer fraud probability
-consumer_fraud_postcodes = fraud_feature.model_with_fraud.select('postcodes', 'SA2_code', 'fraud_probability_consumer')
-consumer_fraud_postcodes = consumer_fraud_postcodes.groupBy('postcodes', 'SA2_code')\
+consumer_fraud_postcodes = fraud_feature.model_with_fraud.select('postcodes', 
+'SA2_code', 'fraud_probability_consumer')
+consumer_fraud_postcodes = consumer_fraud_postcodes.groupBy('postcodes', 
+'SA2_code')\
 .agg(F.sum('fraud_probability_consumer').alias('sum_consumer_fraud'))
 consumer_fraud_pdf = consumer_fraud_postcodes.toPandas()
 # join shape file to consumer fraud data by sa2 code
 consumer_df = consumer_fraud_pdf \
-    .merge(gdf[['SA2_code', 'geometry']], left_on='SA2_code', right_on='SA2_code')
+    .merge(gdf[['SA2_code', 'geometry']], left_on='SA2_code', 
+    right_on='SA2_code')
 consumer_df.head(5)
 aus_coords = [-25.2744, 133.7751]
-consumer_fraud_map = folium.Map(aus_coords, tiles="Stamen Terrain", zoom_start=4.5)
+consumer_fraud_map = folium.Map(aus_coords, tiles="Stamen Terrain", 
+zoom_start=4.5)
 
 # add average tips
 c = folium.Choropleth(
@@ -381,17 +391,21 @@ c.add_to(consumer_fraud_map)
 consumer_fraud_map.save(visualisation_path + "consumer_fraud_map.html")
 ### Locations of fraudulent merchants
 # aggregate data by postcode and merchant fraud probability
-merchant_fraud_postcodes = fraud_feature.model_with_fraud.select('postcodes', 'SA2_code', 'fraud_probability_merchant')
-merchant_fraud_postcodes = merchant_fraud_postcodes.groupBy('postcodes', 'SA2_code')\
+merchant_fraud_postcodes = fraud_feature.model_with_fraud.select('postcodes', 
+'SA2_code', 'fraud_probability_merchant')
+merchant_fraud_postcodes = merchant_fraud_postcodes.groupBy('postcodes', 
+'SA2_code')\
 .agg(F.sum('fraud_probability_merchant').alias('sum_merchant_fraud'))
 
 merchant_fraud_pdf = merchant_fraud_postcodes.toPandas()
 # join shape file to consumer fraud data by sa2 code
 merchant_df = merchant_fraud_pdf \
-    .merge(gdf[['SA2_code', 'geometry']], left_on='SA2_code', right_on='SA2_code')
+    .merge(gdf[['SA2_code', 'geometry']], left_on='SA2_code', 
+    right_on='SA2_code')
 
 aus_coords = [-25.2744, 133.7751]
-merchant_fraud_map = folium.Map(aus_coords, tiles="Stamen Terrain", zoom_start=4.5)
+merchant_fraud_map = folium.Map(aus_coords, tiles="Stamen Terrain", 
+zoom_start=4.5)
 
 # add average tips
 d = folium.Choropleth(

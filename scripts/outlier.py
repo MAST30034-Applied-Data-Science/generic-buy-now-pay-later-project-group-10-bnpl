@@ -15,7 +15,7 @@ spark = (
     .config("spark.driver.memory", "10g")
     .getOrCreate()
 )
-#--------------------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 # Define relative target directories
 
 paths_arg = sys.argv[1]
@@ -56,4 +56,5 @@ df = pd.DataFrame(data)
 
 
 
-internal4.write.mode("overwrite").parquet(curated_data_path + "full_join.parquet")
+internal4.write.mode("overwrite").parquet(
+    curated_data_path + "full_join.parquet")

@@ -58,7 +58,8 @@ print(ETL.income.loc[ETL.income['income_2018-2019'] < 0])
 # Check if this SA2 region is in the final join
 print("\n")
 print("Check if this SA2 region is in the final dataset")
-print(outlier.internal4.filter(outlier.internal4.SA2_code == 114011275).collect())
+print(outlier.internal4.filter(outlier.internal4.SA2_code == 114011275
+).collect())
 print("\n")
 
 
@@ -85,4 +86,5 @@ fig1, ax1 = plt.subplots()
 ETL.income['income_2018-2019'].astype(np.double).plot()
 ax1.set_xlabel("Income distribution for 2018-2019")
 ax1.ticklabel_format(style='plain', axis='y')
-plt.savefig(visualisation_path + "Income distribution.jpg",dpi=300, bbox_inches='tight')
+plt.savefig(visualisation_path + "Income distribution.jpg",dpi=300, 
+bbox_inches='tight')

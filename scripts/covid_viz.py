@@ -41,23 +41,30 @@ visualisation_path = PATHS['visualisation_path']
 #------------------------------------------------------------------------------
 transactions = spark.read.parquet(curated_data_path + "full_join.parquet")
 
-covid_transaction_data = transactions.select("merchant_abn", "order_id", "order_datetime")
+covid_transaction_data = transactions.select("merchant_abn", "order_id", 
+"order_datetime")
 
-covid_transaction_data = covid_transaction_data.select(F.col("order_datetime"),\
-F.to_date(F.col("order_datetime"),"MM-yyyy").alias("temp_date"),F.col("order_id"))
+covid_transaction_data = covid_transaction_data.select(F.col("order_datetime"
+),\
+F.to_date(F.col("order_datetime"),"MM-yyyy").alias("temp_date"),
+F.col("order_id"))
 
 covid_transaction_data = covid_transaction_data.withColumn\
 ("month", F.month(F.col("temp_date")))
 covid_transaction_data = covid_transaction_data.withColumn\
 ("year", F.year(F.col("temp_date")))
 
-transactions_2021 = covid_transaction_data.filter(covid_transaction_data.year == 2021)
-transactions_2022 = covid_transaction_data.filter(covid_transaction_data.year == 2021)
+transactions_2021 = covid_transaction_data.filter(
+    covid_transaction_data.year == 2021)
+transactions_2022 = covid_transaction_data.filter(
+    covid_transaction_data.year == 2021)
 
-transactions_month_2021 = transactions_2021.groupBy("month").agg(F.count("order_id").\
+transactions_month_2021 = transactions_2021.groupBy("month").agg(
+    F.count("order_id").\
 alias("num_transactions_month"))
 
-transactions_month_2022 = transactions_2022.groupBy("month").agg(F.count("order_id").\
+transactions_month_2022 = transactions_2022.groupBy("month").agg(
+    F.count("order_id").\
 alias("num_transactions_month"))
 
 covid_case_data = pd.read_csv(curated_data_path + "covid.csv")
@@ -129,30 +136,38 @@ ON temp.month = temp2.mm
 covid_plot_data_2021_pdf = covid_plot_data_2021.toPandas()
 covid_plot_data_2022_pdf = covid_plot_data_2022.toPandas()
 
-# covid_plot_data_2021_pdf.plot(x='total_covid_cases_month', y='num_transactions_month', style='o')
-# covid_plot_data_2022_pdf.plot(x='total_covid_cases_month', y='num_transactions_month', style='o')
+# covid_plot_data_2021_pdf.plot(x='total_covid_cases_month', 
+# y='num_transactions_month', style='o')
+# covid_plot_data_2022_pdf.plot(x='total_covid_cases_month', 
+# y='num_transactions_month', style='o')
 
-# covid_plot_2021 = sns.scatterplot(data=covid_plot_data_2021_pdf, x="total_covid_cases_month", y="num_transactions_month")
+# covid_plot_2021 = sns.scatterplot(data=covid_plot_data_2021_pdf, 
+# x="total_covid_cases_month", y="num_transactions_month")
 # plt.savefig("../plots/covid_transactions_2021.jpg")
 
-# covid_plot_2022 = sns.scatterplot(data=covid_plot_data_2022_pdf, x="total_covid_cases_month", y="num_transactions_month")
+# covid_plot_2022 = sns.scatterplot(data=covid_plot_data_2022_pdf, 
+# x="total_covid_cases_month", y="num_transactions_month")
 # plt.savefig("../plots/covid_transactions_2022.jpg")
 
 plt.figure()
-plt.scatter(covid_plot_data_2021_pdf['total_covid_cases_month'],covid_plot_data_2021_pdf['num_transactions_month'])
+plt.scatter(covid_plot_data_2021_pdf['total_covid_cases_month'],
+covid_plot_data_2021_pdf['num_transactions_month'])
 plt.title('Covid Cases per Month vs Number of Transactions per Month')
 plt.xlabel('Total Covid Cases per Month')
 plt.ylabel('Number of Transactions per Month')
-plt.savefig(visualisation_path + "covid_transactions_2021.jpg", dpi=300, bbox_inches='tight')
+plt.savefig(visualisation_path + "covid_transactions_2021.jpg", 
+dpi=300, bbox_inches='tight')
 
 plt.figure().clear()
 
 plt.figure()
-plt.scatter(covid_plot_data_2022_pdf['total_covid_cases_month'],covid_plot_data_2022_pdf['num_transactions_month'])
+plt.scatter(covid_plot_data_2022_pdf['total_covid_cases_month'],
+covid_plot_data_2022_pdf['num_transactions_month'])
 plt.title('Covid Cases per Month vs Number of Transactions per Month')
 plt.xlabel('Total Covid Cases per Month')
 plt.ylabel('Number of Transactions per Month')
-plt.savefig(visualisation_path + "covid_transactions_2022.jpg",dpi=300, bbox_inches='tight')
+plt.savefig(visualisation_path + "covid_transactions_2022.jpg",
+dpi=300, bbox_inches='tight')
 
 
 

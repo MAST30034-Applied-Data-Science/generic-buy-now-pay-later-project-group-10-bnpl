@@ -66,11 +66,13 @@ plt.savefig(visualisation_path + "pie chart.jpg", bbox_inches='tight')
 plt.show()
 
 
-total_revenue = top_100[['total_earnings_of_BNPL', 'total_future_transactionss', 'total_future_customers']]
+total_revenue = top_100[['total_earnings_of_BNPL', 'total_future_transactionss'
+,'total_future_customers']]
 total_revenue.columns = ["BNPL earnings", "Transactions", "Customers"]
 fig1, ax1 = plt.subplots(figsize=(12,7))
 sns.boxplot(data=total_revenue, orient="h",dodge=False)
 ax1.set_xlabel("Count")
 ax1.set_title("Distrbution of different features for the top 100 merchants")
-plt.savefig(visualisation_path + "Gender transactions.jpg",dpi=300, bbox_inches='tight')
+plt.savefig(visualisation_path + "Gender transactions.jpg",dpi=300, 
+bbox_inches='tight')
 plt.savefig(visualisation_path + "top 100 distribution.jpg")

@@ -86,15 +86,17 @@ FROM group
 
 # -----------------------------------------------------------------------------
 # Extracting the year, month, day from the timestamp
-a_transactions = a_transactions.withColumn('Year', year(a_transactions.order_datetime))
-a_transactions = a_transactions.withColumn('Month',month(a_transactions.order_datetime))
+a_transactions = a_transactions.withColumn('Year', 
+year(a_transactions.order_datetime))
+a_transactions = a_transactions.withColumn('Month',
+month(a_transactions.order_datetime))
 
 # -----------------------------------------------------------------------------
 # Drop the unwanted columns
-a_transactions = a_transactions.drop('merchant_abn', 'categories','name', 'address', 
-'trans_merchant_abn', 'user_id','order_id','order_datetime', 'consumer_id',
-'int_sa2', 'SA2_name','state_code', 'state_name','population_2020', 
-'population_2021')
+a_transactions = a_transactions.drop('merchant_abn','categories','name',
+'address','trans_merchant_abn', 'user_id','order_id','order_datetime', 
+'consumer_id', 'int_sa2', 'SA2_name','state_code', 'state_name',
+'population_2020', 'population_2021')
  
 
 # -----------------------------------------------------------------------------
@@ -206,30 +208,34 @@ ON edit.merchant_name = rates.drop_name
 
 # -----------------------------------------------------------------------------
 # Drop the redundant columns
-train_transactions = temp4_transactions.drop('m_name', 'f_name', 'drop_name','join_col')
+train_transactions = temp4_transactions.drop('m_name', 'f_name', 'drop_name',
+'join_col')
 
 #==============================================================================
 # STEP 2: Prepare a train and test dataset by offsetting the months by 1
 #==============================================================================
 # ----------------------------------------------------------------------------
 # Select the main columns for offsetting
-train_projection_transactions = train_transactions.select("merchant_name", "SA2_code", 
-"Year", "Month", 'no_of_transactions')
+train_projection_transactions = train_transactions.select("merchant_name", 
+"SA2_code", "Year", "Month", 'no_of_transactions')
 
 # ----------------------------------------------------------------------------
 # Offset the dataset by 1 month
 
 # Offset the year by 1 if the month if the first month
-train_projection_transactions = train_projection_transactions.withColumn("prev_year",\
+train_projection_transactions = train_projection_transactions.withColumn(
+    "prev_year",\
               when(train_projection_transactions["Month"] == 1, 
               train_projection_transactions['Year'
               ] - 1).otherwise(train_projection_transactions['Year']))
-train_projection_transactions = train_projection_transactions.withColumn("prev_month",\
+train_projection_transactions = train_projection_transactions.withColumn(
+    "prev_month",\
               when(train_projection_transactions["Month"] == 1, 12
               ).otherwise(train_projection_transactions['Month'] - 1))
 
 # Drop the redundant columns
-train_projection_transactions = train_projection_transactions.drop("Year", "Month")
+train_projection_transactions = train_projection_transactions.drop("Year", 
+"Month")
 
 # Renam the columns
 train_projection_transactions = train_projection_transactions.withColumnRenamed(
@@ -245,7 +251,8 @@ final_data_transactions = train_transactions.join(train_projection_transactions,
 (train_transactions.merchant_name == train_projection_transactions.p_merchant_name) & 
 (train_transactions.SA2_code == train_projection_transactions.p_SA2_code) & 
 (train_transactions.Year == train_projection_transactions.prev_year) & 
-(train_transactions.Month == train_projection_transactions.prev_month), how = 'inner')
+(train_transactions.Month == train_projection_transactions.prev_month),
+ how = 'inner')
 
 # -----------------------------------------------------------------------------
 # Drop the redundant columns
@@ -260,8 +267,8 @@ for cols in field_str_transactions:
     final_data_transactions = final_data_transactions.withColumn(cols,
     F.col(cols).cast('STRING'))
 
-field_int_transactions = ['no_of_transactions', 'males', 'females', 'males_in_SA2', 
-'females_in_SA2']
+field_int_transactions = ['no_of_transactions', 'males', 'females', 
+'males_in_SA2', 'females_in_SA2']
 
 for col in field_int_transactions:
     final_data_transactions = final_data_transactions.withColumn(col, 
@@ -309,8 +316,8 @@ inputCols=['merchant_name_vec', 'SA2_code_vec', 'Year_vec', 'Month_vec',
 'no_of_transactions' ,'income_per_person','take_rate', 'total_earnings'],
 outputCol= "features" )
 
-outdata1_transactions = assembler1_transactions.transform(onehotdata_transactions)
-# Renaming the target column as label
+outdata1_transactions = assembler1_transactions.transform(
+                                    onehotdata_transactions)
 
 # ----------------------------------------------------------------------------- 
 # Renaming the target column as label
@@ -386,12 +393,14 @@ def ExtractFeatureImportance(featureImp, dataset, featuresCol):
   # ---------------------------------------------------------------------------
 #ExtractFeatureImportance(model.stages[-1].featureImportances, dataset, 
 # "features")
-dataset_fi_transactions = ExtractFeatureImportance(model_transactions.featureImportances, 
+dataset_fi_transactions = ExtractFeatureImportance(
+    model_transactions.featureImportances, 
 predictions_validation_transactions, "features")
 dataset_fi_transactions = spark.createDataFrame(dataset_fi_transactions)
 
 dataset_fi_transactions_df = dataset_fi_transactions.toPandas()
-dataset_fi_transactions_df.to_csv(curated_data_path + "transactions_features.csv")
+dataset_fi_transactions_df.to_csv(
+    curated_data_path + "transactions_features.csv")
 # ----------------------------------------------------------------------------- 
 # Select the latest month from the latest year in the dataset which will be
 # used as a test set for future predictions due to the offsetting done 
@@ -400,7 +409,8 @@ dataset_fi_transactions_df.to_csv(curated_data_path + "transactions_features.csv
 latest_year_transactions = train_transactions.select(max('Year')).collect()[0][0]
 agg_month_1_transactions = train_transactions.filter(
     train_transactions.Year == latest_year_transactions)
-latest_month_transactions = agg_month_1_transactions.select(max('Month')).collect()[0][0]
+latest_month_transactions = agg_month_1_transactions.select(
+    max('Month')).collect()[0][0]
 predicting_data_transactions = agg_month_1_transactions.filter(
     train_transactions.Month == latest_month_transactions)
 predicting_data_transactions = predicting_data_transactions.withColumn(
@@ -451,7 +461,8 @@ inputCols=['merchant_name_vec', 'SA2_code_vec', 'Year_vec', 'Month_vec',
 'income_per_person', 'no_of_transactions','take_rate', 'total_earnings'],
 outputCol= "features" )
 
-outdata1_transactions = assembler1_transactions.transform(onehotdata_transactions)
+outdata1_transactions = assembler1_transactions.transform(
+                                    onehotdata_transactions)
 
 # ----------------------------------------------------------------------------- 
 # Renaming the target column as label
@@ -470,8 +481,10 @@ featureIndexer_transactions =\
 
 # ----------------------------------------------------------------------------- 
 # Transform the test data
-outdata1_transactions = featureIndexer_transactions.transform(outdata1_transactions)
-predictions_test_transactions = model_transactions.transform(outdata1_transactions)
+outdata1_transactions = featureIndexer_transactions.transform(
+                                        outdata1_transactions)
+predictions_test_transactions = model_transactions.transform(
+                                        outdata1_transactions)
 
 # ----------------------------------------------------------------------------- 
 # Aggregate the predictions to merchant level to get the predicted BNPL 

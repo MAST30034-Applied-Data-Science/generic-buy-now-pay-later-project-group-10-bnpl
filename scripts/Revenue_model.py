@@ -56,7 +56,8 @@ full_join = spark.read.parquet(curated_data_path + "full_join.parquet")
 
 # Read the tagged model
 
-tagged_merchants_sdf = spark.read.parquet(curated_data_path + "tagged_merchants.parquet")
+tagged_merchants_sdf = spark.read.parquet(
+    curated_data_path + "tagged_merchants.parquet")
 
 # -----------------------------------------------------------------------------
 # Rename the merchant column 

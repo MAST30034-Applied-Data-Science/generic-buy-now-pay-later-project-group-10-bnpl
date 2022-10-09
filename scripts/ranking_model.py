@@ -26,7 +26,8 @@ external_data_path = PATHS['external_data_path']
 #==============================================================================
 # READING IN DATA
 #==============================================================================
-fraud = pd.read_parquet(raw_internal_path + "avg_fraud_rate_per_merchant.parquet")
+fraud = pd.read_parquet(
+    raw_internal_path + "avg_fraud_rate_per_merchant.parquet")
 transactions = pd.read_csv(curated_data_path + "transactionss.csv")
 bnpl_earnings = pd.read_csv(curated_data_path + "BNPL_earnings.csv")
 revenue = pd.read_csv(curated_data_path + "revenue.csv")
@@ -38,7 +39,8 @@ customers = customers[['merchant_name', 'total_future_customers']]
 revenue = revenue[['merchant_name', 'total_revenue']]
 tags = tags[['name', 'merchant_abn', 'category']]
 tags = tags.rename(columns={'name': 'merchant_name'})
-#transactions = transactions.rename(columns={'total_future_transactionss': 'total_future_transactions'})
+#transactions = transactions.rename(columns={'total_future_transactionss': 
+# 'total_future_transactions'})
 
 
 tags_trans = pd.merge(tags, transactions, on=['merchant_name'],
@@ -57,8 +59,10 @@ final = pd.merge(add_bnpl, fraud, on ='merchant_abn', how='inner')
 
 normalised = final.copy()
 
-for feature in ['total_future_customers', 'total_revenue', 'total_earnings_of_BNPL',
-               'total_future_transactionss', 'average_fraud_rate_per_merchant']:
+for feature in ['total_future_customers', 'total_revenue', 
+               'total_earnings_of_BNPL',
+               'total_future_transactionss', 
+               'average_fraud_rate_per_merchant']:
     normalised[feature] = (normalised[feature] - normalised[feature].min()) \
                         / (normalised[feature].max() - normalised[feature].min())    
 
@@ -71,11 +75,16 @@ revenue_weights = int(weights[2])
 customer_weights = int(weights[3])
 bnpl_weights = int(weights[4])
 
-normalised['ranking_feature'] = transactions_weights*normalised['total_future_transactionss'] + \
-                                revenue_weights*normalised['total_revenue'] + \
-                                customer_weights*normalised['total_future_customers'] + \
-                                bnpl_weights*normalised['total_earnings_of_BNPL'] + \
-                                -1*fraud_weights*normalised['average_fraud_rate_per_merchant']
+normalised['ranking_feature'] = transactions_weights*normalised[
+                                'total_future_transactionss'] + \
+                                revenue_weights*normalised[
+                                'total_revenue'] + \
+                                customer_weights*normalised[
+                                'total_future_customers'] + \
+                                bnpl_weights*normalised[
+                                'total_earnings_of_BNPL'] + \
+                                -1*fraud_weights*normalised[
+                                'average_fraud_rate_per_merchant']
 
 #------------------------------------------------------------------------------
 # splitting by tags for top 10 merchants

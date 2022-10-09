@@ -26,8 +26,10 @@ customer_features = pd.read_csv(curated_data_path + "customer_features.csv")
 revenue_metrics = pd.read_csv(curated_data_path + "revenue_metrics.csv")
 revenue_features = pd.read_csv(curated_data_path + "revenue_features.csv")
 
-transactions_metrics = pd.read_csv(curated_data_path + "transactions_metrics.csv")
-transactions_features = pd.read_csv(curated_data_path + "transactions_features.csv")
+transactions_metrics = pd.read_csv(
+    curated_data_path + "transactions_metrics.csv")
+transactions_features = pd.read_csv(
+    curated_data_path + "transactions_features.csv")
 
 metrics = {
     'Model name': ['Predicted BNPL earnings', 'Predicted no. of Customers', 

@@ -49,7 +49,8 @@ external_data_path = PATHS['external_data_path']
 #==============================================================================
 full_join = spark.read.parquet(curated_data_path + "full_join.parquet")
 # Read the tagged model
-tagged_merchants_sdf = spark.read.parquet(curated_data_path + "tagged_merchants.parquet")
+tagged_merchants_sdf = spark.read.parquet(
+    curated_data_path + "tagged_merchants.parquet")
 
 # -----------------------------------------------------------------------------
 # Rename the merchant column 
@@ -89,9 +90,9 @@ a_customer = a_customer.withColumn('Month',month(a_customer.order_datetime))
 
 # -----------------------------------------------------------------------------
 # Drop the unwanted columns
-a_customer = a_customer.drop('merchant_abn', 'categories','name', 'address', 'trans_merchant_abn', 
-'order_id','order_datetime', 'consumer_id','int_sa2', 'SA2_name','state_code',
-'state_name','population_2020', 'population_2021')
+a_customer = a_customer.drop('merchant_abn', 'categories','name', 'address', 
+'trans_merchant_abn', 'order_id','order_datetime', 'consumer_id','int_sa2', 
+'SA2_name','state_code','state_name','population_2020', 'population_2021')
  
 
 # -----------------------------------------------------------------------------
@@ -210,8 +211,8 @@ train_customer = temp4_customer.drop('m_name', 'f_name', 'drop_name','join_col')
 #==============================================================================
 # ----------------------------------------------------------------------------
 # Select the main columns for offsetting
-train_projection_customer = train_customer.select("merchant_name", "SA2_code", "Year", 
-"Month", 'no_of_customers')
+train_projection_customer = train_customer.select("merchant_name", "SA2_code", 
+"Year", "Month", 'no_of_customers')
 
 # ----------------------------------------------------------------------------
 # Offset the dataset by 1 month
@@ -219,7 +220,8 @@ train_projection_customer = train_customer.select("merchant_name", "SA2_code", "
 # Offset the year by 1 if the month if the first month
 train_projection_customer = train_projection_customer.withColumn("prev_year", \
               when(train_projection_customer["Month"] == 1, 
-              train_projection_customer['Year'] - 1).otherwise(train_projection_customer['Year']))
+              train_projection_customer['Year'] - 1).otherwise(
+                train_projection_customer['Year']))
 train_projection_customer = train_projection_customer.withColumn("prev_month", \
               when(train_projection_customer["Month"] == 1, 12
               ).otherwise(train_projection_customer['Month'] - 1))
@@ -228,7 +230,8 @@ train_projection_customer = train_projection_customer.withColumn("prev_month", \
 train_projection_customer = train_projection_customer.drop("Year", "Month")
 
 # Renam the columns
-train_projection_customer = train_projection_customer.withColumnRenamed("no_of_customers", 
+train_projection_customer = train_projection_customer.withColumnRenamed(
+            "no_of_customers", 
             "future_customers") \
             .withColumnRenamed("merchant_name", 
             "p_merchant_name") \
@@ -237,28 +240,30 @@ train_projection_customer = train_projection_customer.withColumnRenamed("no_of_c
 # -----------------------------------------------------------------------------
 # Join the offsetted values to the rest of the SA2 and aggregated values
 final_data_customer = train_customer.join(train_projection_customer, 
-            (train_customer.merchant_name == train_projection_customer.p_merchant_name) & 
-            (train_customer.SA2_code == train_projection_customer.p_SA2_code) & 
-            (train_customer.Year == train_projection_customer.prev_year) & 
-            (train_customer.Month == train_projection_customer.prev_month), how = 'inner')
+(train_customer.merchant_name == train_projection_customer.p_merchant_name) & 
+(train_customer.SA2_code == train_projection_customer.p_SA2_code) & 
+(train_customer.Year == train_projection_customer.prev_year) & 
+(train_customer.Month == train_projection_customer.prev_month), how = 'inner')
 
 # -----------------------------------------------------------------------------
 # Drop the redundant columns
-final_data_customer = final_data_customer.drop("p_merchant_name", "p_SA2_code","prev_year", 
-"prev_month")
+final_data_customer = final_data_customer.drop("p_merchant_name", "p_SA2_code",
+"prev_year", "prev_month")
 
 # ----------------------------------------------------------------------------- 
 # Change the variable types
 field_str_customer = ['Year', 'Month', 'SA2_code']
 
 for cols in field_str_customer:
-    final_data_customer = final_data_customer.withColumn(cols,F.col(cols).cast('STRING'))
+    final_data_customer = final_data_customer.withColumn(cols,F.col(cols
+    ).cast('STRING'))
 
 field_int_customer = ['no_of_customers', 'males', 'females', 'males_in_SA2', 
 'females_in_SA2']
 
 for col in field_int_customer:
-    final_data_customer = final_data_customer.withColumn(col, F.col(col).cast('INT'))
+    final_data_customer = final_data_customer.withColumn(col, 
+    F.col(col).cast('INT'))
 
 #==============================================================================
 # STEP 3: Build and train the Random Forrest Model
@@ -276,21 +281,23 @@ for col in field:
 )
 # String indexing the categorical columns
 
-indexer_customer = StringIndexer(inputCols = ['merchant_name', 'SA2_code', 'Year', 
-'Month', 'revenue_levels','category'],
+indexer_customer = StringIndexer(inputCols = ['merchant_name', 'SA2_code', 
+'Year', 'Month', 'revenue_levels','category'],
 outputCols = ['merchant_name_num', 'SA2_code_num', 'Year_num', 'Month_num', 
 'revenue_levels_num','category_num'], handleInvalid="keep")
 
-indexd_data_customer = indexer_customer.fit(final_data_customer).transform(final_data_customer)
+indexd_data_customer = indexer_customer.fit(final_data_customer
+).transform(final_data_customer)
 
 
 # Applying onehot encoding to the categorical data that is string indexed above
-encoder_customer = OneHotEncoder(inputCols = ['merchant_name_num', 'SA2_code_num', 
-'Year_num', 'Month_num', 'revenue_levels_num','category_num'],
+encoder_customer = OneHotEncoder(inputCols = ['merchant_name_num', 
+'SA2_code_num', 'Year_num', 'Month_num', 'revenue_levels_num','category_num'],
 outputCols = ['merchant_name_vec', 'SA2_code_vec', 'Year_vec', 'Month_vec', 
 'revenue_levels_vec','category_vec'])
 
-onehotdata_customer = encoder_customer.fit(indexd_data_customer).transform(indexd_data_customer)
+onehotdata_customer = encoder_customer.fit(indexd_data_customer
+).transform(indexd_data_customer)
 
 
 # Assembling the training data as a vector of features 
@@ -323,7 +330,8 @@ outdata1_customer = featureIndexer_customer.transform(outdata1_customer)
 # ----------------------------------------------------------------------------- 
 # Split the data into training and validation sets (30% held out for testing)
 
-trainingData_customer, testData_customer = outdata1_customer.randomSplit([0.7, 0.3], seed = 20)
+trainingData_customer, testData_customer = outdata1_customer.randomSplit(
+    [0.7, 0.3], seed = 20)
 
 # ----------------------------------------------------------------------------- 
 # Train a RandomForest model.
@@ -347,11 +355,13 @@ predictions_validation_customer.select("prediction", "label", "features")
 
 evaluator_train_rmse_customer = RegressionEvaluator(
     labelCol="label", predictionCol="prediction", metricName="rmse")
-rmse_train_customer = evaluator_train_rmse_customer.evaluate(predictions_validation_customer)
+rmse_train_customer = evaluator_train_rmse_customer.evaluate(
+    predictions_validation_customer)
 
 evaluator_train_mae_customer = RegressionEvaluator(
     labelCol="label", predictionCol="prediction", metricName="mae")
-mae_train_customer = evaluator_train_mae_customer.evaluate(predictions_validation_customer)
+mae_train_customer = evaluator_train_mae_customer.evaluate(
+    predictions_validation_customer)
 
 customer_metrics = {
     'RMSE': [rmse_train_customer],
@@ -374,7 +384,8 @@ def ExtractFeatureImportance(featureImp, dataset, featuresCol):
   # ---------------------------------------------------------------------------
 #ExtractFeatureImportance(model.stages[-1].featureImportances, dataset, 
 # "features")
-dataset_fi_customer = ExtractFeatureImportance(model_customer.featureImportances, 
+dataset_fi_customer = ExtractFeatureImportance(
+    model_customer.featureImportances, 
 predictions_validation_customer, "features")
 dataset_fi_customer = spark.createDataFrame(dataset_fi_customer)
 
@@ -386,43 +397,51 @@ dataset_fi_customer_df.to_csv(curated_data_path + "customer_features.csv")
 # previously
 
 latest_year_customer = train_customer.select(max('Year')).collect()[0][0]
-agg_month_1_customer = train_customer.filter(train_customer.Year == latest_year_customer)
-latest_month_customer = agg_month_1_customer.select(max('Month')).collect()[0][0]
-predicting_data_customer = agg_month_1_customer.filter(train_customer.Month == latest_month_customer)
-predicting_data_customer = predicting_data_customer.withColumn("future_customers", lit(0))
+agg_month_1_customer = train_customer.filter(
+    train_customer.Year == latest_year_customer)
+latest_month_customer = agg_month_1_customer.select(max('Month')
+).collect()[0][0]
+predicting_data_customer = agg_month_1_customer.filter(
+    train_customer.Month == latest_month_customer)
+predicting_data_customer = predicting_data_customer.withColumn(
+    "future_customers", lit(0))
 
 # ----------------------------------------------------------------------------- 
 # Change the variable types
 field_str_customer = ['Year', 'Month', 'SA2_code']
 
 for cols in field_str_customer:
-    predicting_data_customer = predicting_data_customer.withColumn(cols,F.col(cols).cast('STRING'))
+    predicting_data_customer = predicting_data_customer.withColumn(
+        cols,F.col(cols).cast('STRING'))
 
 field_int_customer = ['no_of_customers', 'males', 'females', 'males_in_SA2', 
 'females_in_SA2']
 
 for col in field_int_customer:
-    predicting_data_customer = predicting_data_customer.withColumn(col, F.col(col).cast('INT'))
+    predicting_data_customer = predicting_data_customer.withColumn(col, 
+    F.col(col).cast('INT'))
 #==============================================================================
 # STEP 4: Make future predictions
 #==============================================================================
 # Repeat the indexing and vector assembling steps again for the test data
 # String indexing the categorical columns
-indexer_customer = StringIndexer(inputCols = ['merchant_name', 'SA2_code', 'Year', 
+indexer_customer = StringIndexer(inputCols = ['merchant_name', 'SA2_code','Year', 
 'Month', 'revenue_levels','category'],
 outputCols = ['merchant_name_num', 'SA2_code_num', 'Year_num', 'Month_num', 
 'revenue_levels_num','category_num'], handleInvalid="keep")
 
-indexd_data_customer = indexer_customer.fit(predicting_data_customer).transform(predicting_data_customer)
+indexd_data_customer = indexer_customer.fit(predicting_data_customer
+).transform(predicting_data_customer)
 
 
 # Applying onehot encoding to the categorical data that is string indexed above
-encoder_customer = OneHotEncoder(inputCols = ['merchant_name_num', 'SA2_code_num', 
+encoder_customer = OneHotEncoder(inputCols = ['merchant_name_num','SA2_code_num', 
 'Year_num', 'Month_num', 'revenue_levels_num','category_num'],
 outputCols = ['merchant_name_vec', 'SA2_code_vec', 'Year_vec', 'Month_vec', 
 'revenue_levels_vec','category_vec'])
 
-onehotdata_customer = encoder_customer.fit(indexd_data_customer).transform(indexd_data_customer)
+onehotdata_customer = encoder_customer.fit(indexd_data_customer
+).transform(indexd_data_customer)
 
 
 # Assembling the training data as a vector of features 
