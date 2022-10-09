@@ -37,6 +37,4 @@ Check the requirement, run the whole code in a new environment, commenting
 
 Note to groups: Make sure to read the `README.md` located in `./data/README.md` for details on how the weekly datasets will be released.
 
-packages to install:
-- openpyxl
-- matplotlib
+Required packages and their correct versions can be found in the requirements.txt file 
