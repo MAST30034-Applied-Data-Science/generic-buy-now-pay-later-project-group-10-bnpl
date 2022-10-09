@@ -19,7 +19,7 @@ Run the requirements.txt for a pip installation.
 To run the pipeline, visit `../notebook/final_summary.ipynb` and run the cells in order.
 
 ### File directory
-File name: location of the directory
+The followings shows "file name: location of the directory"
 
 - Jupyter Notebooks: `../notebooks`
 - `.py` scripts: `../scripts`
