@@ -1,11 +1,26 @@
 #This script visualise the final ranking output for the top 100 merchants.
 
 import pandas as pd
+import sys, json
 import matplotlib.pyplot as plt
 
+#------------------------------------------------------------------------------
+# Define relative target directories
+
+paths_arg = sys.argv[1]
+
+with open(paths_arg) as json_paths: 
+    PATHS = json.load(json_paths)
+    json_paths.close()
+
+raw_internal_path = PATHS['raw_internal_data_path']
+curated_data_path = PATHS['curated_data_path']
+external_data_path = PATHS['external_data_path']
+visualisation_path = PATHS['visualisation_path']
+#------------------------------------------------------------------------------
 
 # top 100 overall
-rank = pd.read_csv("../data/curated/final_rank.csv").iloc[:,1:]
+rank = pd.read_csv(curated_data_path + "final_rank.csv").iloc[:,1:]
 rank['rank'] = rank.index
 rank["total_revenue (in hundred)"] = rank["total_revenue"] / 100
 
@@ -35,7 +50,7 @@ data = pd.concat([data, avg_rank.to_frame().T], ignore_index = True)
 data = data.rename(columns={"merchant_name": "merchant"}).set_index("merchant")
 data.plot.barh(title=f"Top 5 merchants").legend(bbox_to_anchor=(1.01, 1), loc='upper left', borderaxespad=0)
 
-plt.savefig("../plots/top5.jpg", bbox_inches="tight")
+plt.savefig(visualisation_path + "top5.jpg", bbox_inches="tight")
 
 
 
@@ -61,7 +76,7 @@ data0 = data0.rename(columns={"merchant_name": "merchant"}).set_index("merchant"
 
 data0.plot.barh(title=f"Top 5 merchants in {category}").legend(bbox_to_anchor=(1.01, 1), loc='upper left', borderaxespad=0)
 
-plt.savefig("../plots/top5_beauty.jpg", bbox_inches="tight")
+plt.savefig(visualisation_path + "top5_beauty.jpg", bbox_inches="tight")
 
 
 
@@ -86,7 +101,7 @@ data1 = data1.rename(columns={"merchant_name": "merchant"}).set_index("merchant"
 
 data1.plot.barh(title=f"Top 5 merchants in {category}").legend(bbox_to_anchor=(1.01, 1), loc='upper left', borderaxespad=0)
 
-plt.savefig("../plots/top5_books.jpg", bbox_inches="tight")
+plt.savefig(visualisation_path + "top5_books.jpg", bbox_inches="tight")
 
 
 
@@ -111,7 +126,7 @@ data2 = data2.rename(columns={"merchant_name": "merchant"}).set_index("merchant"
 
 data2.plot.barh(title=f"Top 5 merchants in {category}").legend(bbox_to_anchor=(1.01, 1), loc='upper left', borderaxespad=0)
 
-plt.savefig("../plots/top5_electronics.jpg", bbox_inches="tight")
+plt.savefig(visualisation_path + "top5_electronics.jpg", bbox_inches="tight")
 
 
 
@@ -136,7 +151,7 @@ data3 = data3.rename(columns={"merchant_name": "merchant"}).set_index("merchant"
 
 data3.plot.barh(title=f"Top 5 merchants in {category}").legend(bbox_to_anchor=(1.01, 1), loc='upper left', borderaxespad=0)
 
-plt.savefig("../plots/top5_furniture.jpg", bbox_inches="tight")
+plt.savefig(visualisation_path + "top5_furniture.jpg", bbox_inches="tight")
 
 
 
@@ -161,4 +176,4 @@ data4 = data4.rename(columns={"merchant_name": "merchant"}).set_index("merchant"
 
 data4.plot.barh(title=f"Top 5 merchants in {category}").legend(bbox_to_anchor=(1.01, 1), loc='upper left', borderaxespad=0)
 
-plt.savefig("../plots/top5_toys.jpg", bbox_inches="tight")
+plt.savefig(visualisation_path + "top5_toys.jpg", bbox_inches="tight")

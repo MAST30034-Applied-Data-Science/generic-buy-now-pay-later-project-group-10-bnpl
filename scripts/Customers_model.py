@@ -1,4 +1,5 @@
 import pandas as pd
+import sys, json
 from pyspark.sql import SparkSession, functions as F
 #==============================================================================
 import lbl2vec
@@ -30,13 +31,25 @@ spark = (
     .config("spark.executor.memory", "10g")
     .getOrCreate()
 )
+#------------------------------------------------------------------------------
+# Define relative target directories
+
+paths_arg = sys.argv[1]
+
+with open(paths_arg) as json_paths: 
+    PATHS = json.load(json_paths)
+    json_paths.close()
+
+raw_internal_path = PATHS['raw_internal_data_path']
+curated_data_path = PATHS['curated_data_path']
+external_data_path = PATHS['external_data_path']
 
 #==============================================================================
 # STEP 1: Prepare the main dataset
 #==============================================================================
-full_join = spark.read.parquet("../data/curated/full_join.parquet")
+full_join = spark.read.parquet(curated_data_path + "full_join.parquet")
 # Read the tagged model
-tagged_merchants_sdf = spark.read.parquet("../data/curated/tagged_merchants.parquet")
+tagged_merchants_sdf = spark.read.parquet(curated_data_path + "tagged_merchants.parquet")
 
 # -----------------------------------------------------------------------------
 # Rename the merchant column 
@@ -346,7 +359,7 @@ customer_metrics = {
 }
 
 customer_metrics_df = pd.DataFrame(customer_metrics)
-customer_metrics_df.to_csv("../data/curated/customer_metrics.csv")
+customer_metrics_df.to_csv(curated_data_path + "customer_metrics.csv")
 # ----------------------------------------------------------------------------- 
 # Define a function to extract important feature column names
 def ExtractFeatureImportance(featureImp, dataset, featuresCol):
@@ -366,7 +379,7 @@ predictions_validation_customer, "features")
 dataset_fi_customer = spark.createDataFrame(dataset_fi_customer)
 
 dataset_fi_customer_df = dataset_fi_customer.toPandas()
-dataset_fi_customer_df.to_csv("../data/curated/customer_features.csv")
+dataset_fi_customer_df.to_csv(curated_data_path + "customer_features.csv")
 # ----------------------------------------------------------------------------- 
 # Select the latest month from the latest year in the dataset which will be
 # used as a test set for future predictions due to the offsetting done 
@@ -457,5 +470,5 @@ GROUP BY merchant_name
 # -----------------------------------------------------------------------------  
 # Convert the predictions to a pandas dataframe and save as a csv
 pred_df_customer = pred_customer.toPandas()
-pred_df_customer.to_csv("../data/curated/customers.csv")
+pred_df_customer.to_csv(curated_data_path + "customers.csv")
 # ----------------------------------------------------------------------------- 

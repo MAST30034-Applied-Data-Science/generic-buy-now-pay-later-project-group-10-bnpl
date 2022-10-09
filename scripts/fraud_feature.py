@@ -1,12 +1,11 @@
 #============================================================================================
 import pandas as pd
+import sys, json
 from pyspark.sql.functions import col
 from pyspark.sql import functions as F
 from pyspark.sql.functions import when
 from pyspark.sql import SparkSession
 from pyspark.sql import functions as countDistinct
-import ETL
-import outlier
 
 #============================================================================================
 # Create a spark session
@@ -20,15 +19,27 @@ spark = (
     .config("spark.executor.memory", "5g")
     .getOrCreate()
 )
+#------------------------------------------------------------------------------
+# Define relative target directories
+
+paths_arg = sys.argv[1]
+
+with open(paths_arg) as json_paths: 
+    PATHS = json.load(json_paths)
+    json_paths.close()
+
+raw_internal_path = PATHS['raw_internal_data_path']
+curated_data_path = PATHS['curated_data_path']
+external_data_path = PATHS['external_data_path']
+
 
 #============================================================================================
 # LOAD THE DATA
 #============================================================================================
 # Retrive the required data
 
-
-
-segments_data = spark.read.option("header","true").csv('../data/curated/tagged_merchants.csv')
+segments_data = spark.read.option("header","true").csv(curated_data_path + "tagged_merchants.csv")
+full_join = spark.read.parquet(curated_data_path + "full_join.parquet")
 
 #============================================================================================
 # JOINING THE DATA TABLES
@@ -38,7 +49,8 @@ segments_data = spark.read.option("header","true").csv('../data/curated/tagged_m
 segments_data = segments_data.withColumnRenamed("name", "merchant_name1")\
        .withColumnRenamed("merchant_abn", "merchant_abn1")
 
-outlier.internal4.createOrReplaceTempView("temp")
+
+full_join.createOrReplaceTempView("temp")
 
 segments_data.createOrReplaceTempView("temp2")
 
@@ -78,6 +90,6 @@ model_with_fraud = model_with_fraud.drop("_c0", "merchant_name1", "merchant_abn1
 # SAVING FINAL DATASETS
 #============================================================================================
 
-model_with_fraud.write.mode("overwrite").parquet("../data/tables/transactions_with_fraud_rates.parquet")
-final_model_with_fraud.write.mode("overwrite").parquet("../data/tables/avg_fraud_rate_per_merchant.parquet")
+model_with_fraud.write.mode("overwrite").parquet(raw_internal_path + "transactions_with_fraud_rates.parquet")
+final_model_with_fraud.write.mode("overwrite").parquet(raw_internal_path + "avg_fraud_rate_per_merchant.parquet")
 #============================================================================================

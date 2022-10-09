@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 from pyspark.sql import SparkSession, functions as F
 import lbl2vec
+import sys, json
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.cluster import KMeans
 import numpy as np
@@ -10,8 +11,9 @@ import folium
 import matplotlib
 from pyspark.sql.functions import date_format
 import seaborn as sns
-
-# Create a spark session (which will run spark jobs)
+#==============================================================================
+# Create a spark session
+#==============================================================================
 spark = (
     SparkSession.builder.appName("MAST30034 Project 1")
     .config("spark.sql.repl.eagerEval.enabled", True) 
@@ -22,7 +24,22 @@ spark = (
     .getOrCreate()
 )
 
-transactions = spark.read.parquet("../data/curated/full_join.parquet")
+#------------------------------------------------------------------------------
+# Define relative target directories
+
+paths_arg = sys.argv[1]
+
+with open(paths_arg) as json_paths: 
+    PATHS = json.load(json_paths)
+    json_paths.close()
+
+raw_internal_path = PATHS['raw_internal_data_path']
+curated_data_path = PATHS['curated_data_path']
+external_data_path = PATHS['external_data_path']
+visualisation_path = PATHS['visualisation_path']
+
+#------------------------------------------------------------------------------
+transactions = spark.read.parquet(curated_data_path + "full_join.parquet")
 
 covid_transaction_data = transactions.select("merchant_abn", "order_id", "order_datetime")
 
@@ -43,7 +60,7 @@ alias("num_transactions_month"))
 transactions_month_2022 = transactions_2022.groupBy("month").agg(F.count("order_id").\
 alias("num_transactions_month"))
 
-covid_case_data = pd.read_csv("../data/curated/covid.csv")
+covid_case_data = pd.read_csv(curated_data_path + "covid.csv")
 covid_case_sdf = spark.createDataFrame(covid_case_data)
 
 #Inner join:
@@ -126,7 +143,7 @@ plt.scatter(covid_plot_data_2021_pdf['total_covid_cases_month'],covid_plot_data_
 plt.title('Covid Cases per Month vs Number of Transactions per Month')
 plt.xlabel('Total Covid Cases per Month')
 plt.ylabel('Number of Transactions per Month')
-plt.savefig('../plots/covid_transactions_2021.jpg', dpi=300, bbox_inches='tight')
+plt.savefig(visualisation_path + "covid_transactions_2021.jpg", dpi=300, bbox_inches='tight')
 
 plt.figure().clear()
 
@@ -135,7 +152,7 @@ plt.scatter(covid_plot_data_2022_pdf['total_covid_cases_month'],covid_plot_data_
 plt.title('Covid Cases per Month vs Number of Transactions per Month')
 plt.xlabel('Total Covid Cases per Month')
 plt.ylabel('Number of Transactions per Month')
-plt.savefig('../plots/covid_transactions_2022.jpg',dpi=300, bbox_inches='tight')
+plt.savefig(visualisation_path + "covid_transactions_2022.jpg",dpi=300, bbox_inches='tight')
 
 
 

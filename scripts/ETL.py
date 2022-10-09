@@ -254,7 +254,7 @@ transactions = transactions.withColumnRenamed("merchant_abn", "trans_merchant_ab
 # PREPROCESSING THE SA2 TOTAL POPULATION DATASET
 #============================================================================================
 # Read the SA2 total population by districts dataset
-population = pd.read_excel("../data/SA2_total_population/SA2_pop.xlsx",sheet_name="Table 1")
+population = pd.read_excel(external_data_path + "SA2_total_population/SA2_pop.xlsx",sheet_name="Table 1")
 
 # Select the relevant rows to filter out uneccessary data
 population = population.iloc[8:,:31]
@@ -279,13 +279,13 @@ population.drop([2466, 2468], inplace=True)
 population.dropna(inplace=True)
 
 # Save the final curated dataset as csv file
-population.to_csv("../data/curated/SA2_total_population.csv")
+population.to_csv(curated_data_path + "SA2_total_population.csv")
 
 #============================================================================================
 # PREPROCESSING SA2 DISTRICT BOUNDARIES DATASET
 #============================================================================================
 # Loading the data
-boundaries = gpd.read_file("../data/SA2_boundaries/SA2_2021_AUST_GDA2020.shp")
+boundaries = gpd.read_file(external_data_path + "SA2_boundaries/SA2_2021_AUST_GDA2020.shp")
 
 # Checking for null values
 boundaries.dropna(inplace=True)
@@ -300,15 +300,15 @@ boundaries = boundaries[['SA2_CODE21', 'SA2_NAME21', 'STE_CODE21', 'STE_NAME21',
 new_columns = ['SA2_code', 'SA2_name', 'state_code', 'state_name', 'geometry']
 boundaries.columns = new_columns
 # Saving the cleaned dataset
-boundaries.to_file('../data/curated/boundaries.shp', driver='ESRI Shapefile')
+boundaries.to_file(curated_data_path + "boundaries.shp", driver='ESRI Shapefile')
 # Saving the cleaned dataset
-boundaries.to_csv("../data/curated/SA2_district_boundaries.csv")
+boundaries.to_csv(curated_data_path + "SA2_district_boundaries.csv")
 
 #============================================================================================
 # PREPROCESSING SA2 INCOME DATASET
 #============================================================================================
 # Loading the data
-income = pd.read_excel("../data/SA2_income/SA2_income.xlsx", sheet_name="Table 1.4")
+income = pd.read_excel(external_data_path + "SA2_income/SA2_income.xlsx", sheet_name="Table 1.4")
 
 # Select the necessary columns
 income = income.iloc[6:,[0,1,12,13,14,15,16]]
@@ -334,13 +334,13 @@ for index, rows in income.iteritems():
 income.dropna(inplace=True)
 
 # Saving the cleaned dataset
-income.to_csv("../data/curated/SA2_income.csv")
+income.to_csv(curated_data_path + "SA2_income.csv")
         
 #============================================================================================
 # PREPROCESSING SA2 CENSUS DATASET
 #============================================================================================
 # Read the csv file
-census = pd.read_csv("../data/SA2_census/2021 Census GCP Statistical Area 2 for AUS/2021Census_G01_AUST_SA2.csv")
+census = pd.read_csv(external_data_path + "SA2_census/2021 Census GCP Statistical Area 2 for AUS/2021Census_G01_AUST_SA2.csv")
 
 # Drop the null values
 census.dropna()
@@ -353,13 +353,13 @@ new_cols = ['SA2_code', 'total_males', 'total_females', 'total_persons']
 census.columns = new_cols
 
 # Save as a csv file
-census.to_csv("../data/curated/SA2_census.csv")
+census.to_csv(curated_data_path + "SA2_census.csv")
 
 #============================================================================================
 # PREPROCESSING COVID-19 dataset
 #============================================================================================
 # Read the data
-covid = pd.read_csv("../data/covid.csv")
+covid = pd.read_csv(external_data_path + "covid.csv")
 
 # Selecting the required columns
 cols = ['date', 'state', 'confirmed']
@@ -375,14 +375,13 @@ covid['mm'] = pd.to_datetime(covid['date']).dt.month
 covid['dd'] = pd.to_datetime(covid['date']).dt.day
 
 # Save the cleaned data to the curated folder
-covid.to_csv("../data/curated/covid.csv")
+covid.to_csv(curated_data_path + "covid.csv")
 
 #============================================================================================
 # PREPROCESSING POSTCODE dataset
 #============================================================================================
 # Read the data
-# postcodes = pd.read_csv("../data/postcode.csv")
-postcodes = spark.read.option("header", True).csv('../data/postcode.csv')
+postcodes = spark.read.option("header", True).csv(external_data_path + "postcode.csv")
 
 # Selecting the required columns and renaming 
 postcodes = postcodes.select(postcodes.locality.alias("suburb"),
@@ -396,7 +395,7 @@ postcode_nonull.count()
 distinct_postcodes = postcode_nonull.dropDuplicates(["postcodes"])
 
 # Save the cleaned data to the curated folder
-distinct_postcodes.write.mode("overwrite").csv("../data/curated/postcode.csv")
+distinct_postcodes.write.mode("overwrite").csv(curated_data_path + "postcode.csv")
 
 #============================================================================================
 # LOAD
@@ -427,25 +426,19 @@ final_join2 = final_join2.withColumn("int_sa2", final_join2["sa2"].cast(IntegerT
 # JOIN ABS DATA TO INTERNAL DATA
 #============================================================================================
 # Retrive the required data
-population = pd.read_csv("../data/curated/SA2_total_population.csv")
-income = pd.read_csv("../data/curated/SA2_income.csv")
-census = pd.read_csv("../data/curated/SA2_census.csv")
-# boundaries = pd.read_csv("../data/curated/SA2_district_boundaries.csv")
+population = pd.read_csv(curated_data_path + "SA2_total_population.csv")
+income = pd.read_csv(curated_data_path + "SA2_income.csv")
+census = pd.read_csv(curated_data_path + "SA2_census.csv")
 
 # ----------------------------------------------------------------------------
 # Remove the first unwanted column from ABS datasets
 population = population.iloc[:,1:]
 income = income.iloc[:,1:]
 census = census.iloc[:,1:]
-# boundaries = boundaries.iloc[:,1:]
 
 # ----------------------------------------------------------------------------
 # Perform inner join on income and census dataset
 income_census = pd.merge(income, census, on = 'SA2_code')
-
-# ----------------------------------------------------------------------------
-# Perform inner join on population and boundaries dataset
-# pop_bd = pd.merge(population, boundaries, on = ['SA2_code','SA2_name', 'state_code', 'state_name'])
 
 # ----------------------------------------------------------------------------
 # Make a final dataset from the the merged datasets

@@ -1,5 +1,6 @@
 #============================================================================================
 import pandas as pd
+import sys, json
 from pyspark.sql.functions import col
 from pyspark.sql import functions as F
 from pyspark.sql.functions import when
@@ -18,17 +19,31 @@ spark = (
     .config("spark.executor.memory", "5g")
     .getOrCreate()
 )
+#------------------------------------------------------------------------------
+# Define relative target directories
+
+paths_arg = sys.argv[1]
+
+with open(paths_arg) as json_paths: 
+    PATHS = json.load(json_paths)
+    json_paths.close()
+
+raw_internal_path = PATHS['raw_internal_data_path']
+curated_data_path = PATHS['curated_data_path']
+external_data_path = PATHS['external_data_path']
+visualisation_path = PATHS['visualisation_path']
+
 #============================================================================================
 #Reading in data: 
 
-fraud_dataset = spark.read.parquet("../data/tables/avg_fraud_rate_per_merchant.parquet")
-full_data = spark.read.parquet("../data/curated/full_join.parquet")
+fraud_dataset = spark.read.parquet(raw_internal_path + "avg_fraud_rate_per_merchant.parquet")
+full_data = spark.read.parquet(curated_data_path + "full_join.parquet")
 
 fraud_dataset = fraud_dataset.select("average_fraud_rate_per_merchant"
                                      ,"merchant_abn").withColumnRenamed("order_id","tags_order_id")
 
 order_data = full_data.select("trans_merchant_abn","order_id")
-tags_data = spark.read.parquet("../data/curated/tagged_merchants.parquet")
+tags_data = spark.read.parquet(curated_data_path + "tagged_merchants.parquet")
 tags_data = tags_data.withColumnRenamed("merchant_abn","tags_merchant_abn").withColumnRenamed("order_id","tags_order_id")
 # tags_data.limit(5)
 
@@ -72,4 +87,4 @@ ax = aggregated_fraud_by_category_pdf.plot.bar(x='category', y='fraud_rate_per_c
 ax.ticklabel_format(style='plain', axis='y')
 ax.set_xlabel("Merchant category")
 ax.set_title("Average fraud rate per Merchabnt")
-plt.savefig("../plots/fraud.jpg", bbox_inches="tight")
+plt.savefig(visualisation_path + "fraud.jpg", bbox_inches="tight")

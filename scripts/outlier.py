@@ -1,4 +1,5 @@
 #==============================================================================
+import sys, json
 from pyspark.sql import SparkSession
 from pyspark.sql import SparkSession
 import pandas as pd
@@ -14,6 +15,18 @@ spark = (
     .config("spark.driver.memory", "10g")
     .getOrCreate()
 )
+#--------------------------------------------------------------------------------------------
+# Define relative target directories
+
+paths_arg = sys.argv[1]
+
+with open(paths_arg) as json_paths: 
+    PATHS = json.load(json_paths)
+    json_paths.close()
+
+raw_internal_path = PATHS['raw_internal_data_path']
+curated_data_path = PATHS['curated_data_path']
+external_data_path = PATHS['external_data_path']
 
 #==============================================================================
 ### REMOVE OUTLIERS as detected in outlier analysis notebook
@@ -43,4 +56,4 @@ df = pd.DataFrame(data)
 
 
 
-internal4.write.mode("overwrite").parquet("../data/curated/full_join.parquet")
+internal4.write.mode("overwrite").parquet(curated_data_path + "full_join.parquet")

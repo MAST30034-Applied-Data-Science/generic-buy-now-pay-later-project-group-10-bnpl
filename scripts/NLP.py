@@ -1,6 +1,7 @@
 #==============================================================================
 # Import libraries
 import pandas as pd
+import sys, json
 from pyspark.sql import SparkSession, functions as F
 import lbl2vec
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -19,14 +20,26 @@ spark = (
     .config("spark.driver.memory", "10g")
     .getOrCreate()
 )
+#------------------------------------------------------------------------------
+# Define relative target directories
+
+paths_arg = sys.argv[1]
+
+with open(paths_arg) as json_paths: 
+    PATHS = json.load(json_paths)
+    json_paths.close()
+
+raw_internal_path = PATHS['raw_internal_data_path']
+curated_data_path = PATHS['curated_data_path']
+external_data_path = PATHS['external_data_path']
 
 # -----------------------------------------------------------------------------
 # Read the consumer data
-consumer = pd.read_csv("../data/tables/tbl_consumer.csv", delimiter="|")
+consumer = pd.read_csv(raw_internal_path + "tbl_consumer.csv", delimiter="|")
 
 # -----------------------------------------------------------------------------
 # Read the merchant data
-merchants = spark.read.parquet("../data/tables/tbl_merchants.parquet")
+merchants = spark.read.parquet(raw_internal_path + "tbl_merchants.parquet")
 
 # -----------------------------------------------------------------------------
 # Convert the merchant data to a pandas dataframe
@@ -80,7 +93,7 @@ merchants_df['category'] = merchants_df['store_type'].map(myDict)
 
 # -----------------------------------------------------------------------------
 # Save the tagged model as a csv
-merchants_df.to_csv("../data/curated/tagged_merchants.csv")
+merchants_df.to_csv(curated_data_path + "tagged_merchants.csv")
 
 # -----------------------------------------------------------------------------
 # Drop the unwanted columns and save the tagged model as a parquet file for
@@ -88,5 +101,5 @@ merchants_df.to_csv("../data/curated/tagged_merchants.csv")
 tagged_for_modelling = merchants_df.drop(['tags', 'name', 'cleaned_tags', 
 'store_type'], axis=1)
 
-tagged_for_modelling.to_parquet("../data/curated/tagged_merchants.parquet")
+tagged_for_modelling.to_parquet(curated_data_path + "tagged_merchants.parquet")
 # -----------------------------------------------------------------------------

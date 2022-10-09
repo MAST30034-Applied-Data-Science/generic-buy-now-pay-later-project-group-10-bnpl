@@ -1,6 +1,7 @@
 #==============================================================================
 # Import libraries
 import pandas as pd
+import sys, json
 from pyspark.sql import SparkSession, functions as F
 import lbl2vec
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -35,14 +36,24 @@ spark = (
     .config("spark.executor.memory", "10g")
     .getOrCreate()
 )
+#------------------------------------------------------------------------------
+# Define relative target directories
 
+paths_arg = sys.argv[1]
 
+with open(paths_arg) as json_paths: 
+    PATHS = json.load(json_paths)
+    json_paths.close()
+
+raw_internal_path = PATHS['raw_internal_data_path']
+curated_data_path = PATHS['curated_data_path']
+external_data_path = PATHS['external_data_path']
 #==============================================================================
 # STEP 1: Prepare the main dataset
 #==============================================================================
-full_join = spark.read.parquet("../data/curated/full_join.parquet")
+full_join = spark.read.parquet(curated_data_path + "full_join.parquet")
 # Read the tagged model
-tagged_merchants_sdf = spark.read.parquet("../data/curated/tagged_merchants.parquet")
+tagged_merchants_sdf = spark.read.parquet(curated_data_path + "tagged_merchants.parquet")
 
 # -----------------------------------------------------------------------------
 # Rename the merchant column 
@@ -335,7 +346,7 @@ BNPL_metrics = {
 }
 
 BNPL_metrics_df = pd.DataFrame(BNPL_metrics)
-BNPL_metrics_df.to_csv("../data/curated/BNPL_metrics.csv")
+BNPL_metrics_df.to_csv(curated_data_path + "BNPL_metrics.csv")
 
 # ----------------------------------------------------------------------------- 
 # Define a function to extract important feature column names
@@ -355,7 +366,7 @@ dataset_fi = ExtractFeatureImportance(model.featureImportances,
 predictions_validation, "features")
 dataset_fi = spark.createDataFrame(dataset_fi)
 dataset_fi_BNPL_df = dataset_fi.toPandas()
-dataset_fi_BNPL_df.to_csv("../data/curated/BNPL_features.csv")
+dataset_fi_BNPL_df.to_csv(curated_data_path + "BNPL_features.csv")
 
 # ----------------------------------------------------------------------------- 
 # Select the latest month from the latest year in the dataset which will be
@@ -447,5 +458,5 @@ GROUP BY merchant_name
 # Convert the predictions to a pandas dataframe and save as a csv
 pred_df = pred.toPandas()
 
-pred_df.to_csv("../data/curated/BNPL_earnings.csv")
+pred_df.to_csv(curated_data_path + "BNPL_earnings.csv")
 # ----------------------------------------------------------------------------- 

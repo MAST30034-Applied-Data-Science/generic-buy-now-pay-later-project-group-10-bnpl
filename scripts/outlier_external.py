@@ -1,5 +1,6 @@
 #==============================================================================
 import matplotlib.pyplot as plt
+import sys, json
 import outlier
 import pandas as pd
 import seaborn as sns
@@ -20,7 +21,16 @@ spark = (
     .config("spark.driver.memory", "10g")
     .getOrCreate()
 )
+#------------------------------------------------------------------------------
+# Define relative target directories
 
+paths_arg = sys.argv[1]
+
+with open(paths_arg) as json_paths: 
+    PATHS = json.load(json_paths)
+    json_paths.close()
+
+visualisation_path = PATHS['visualisation_path']
 #------------------------------------------------------------------------------
 
 # summary statistics
@@ -75,4 +85,4 @@ fig1, ax1 = plt.subplots()
 ETL.income['income_2018-2019'].astype(np.double).plot()
 ax1.set_xlabel("Income distribution for 2018-2019")
 ax1.ticklabel_format(style='plain', axis='y')
-plt.savefig("../plots/Income distribution.jpg",dpi=300, bbox_inches='tight')
+plt.savefig(visualisation_path + "Income distribution.jpg",dpi=300, bbox_inches='tight')

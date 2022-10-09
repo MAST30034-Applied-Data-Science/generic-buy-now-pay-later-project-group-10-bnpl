@@ -1,23 +1,37 @@
 #==============================================================================
 # Importing required libraries
-import sys
+import sys, json
 import pandas as pd
 # 2 3 5 4 1
 
 #------------------------------------------------------------------------------
 # take list of values as weights for fraud, transactions, revenue, customer, 
 # bnpl earnings
-weights = list(sys.argv[1].split(','))
+weights = list(sys.argv[2].split(','))
+
+#------------------------------------------------------------------------------
+# Define relative target directories
+
+paths_arg = sys.argv[1]
+
+with open(paths_arg) as json_paths: 
+    PATHS = json.load(json_paths)
+    json_paths.close()
+
+raw_internal_path = PATHS['raw_internal_data_path']
+curated_data_path = PATHS['curated_data_path']
+external_data_path = PATHS['external_data_path']
+
 
 #==============================================================================
 # READING IN DATA
 #==============================================================================
-fraud = pd.read_parquet("../data/tables/avg_fraud_rate_per_merchant.parquet")
-transactions = pd.read_csv("../data/curated/transactionss.csv")
-bnpl_earnings = pd.read_csv("../data/curated/BNPL_earnings.csv")
-revenue = pd.read_csv("../data/curated/revenue.csv")
-customers = pd.read_csv("../data/curated/customers.csv")
-tags = pd.read_csv("../data/curated/tagged_merchants.csv")
+fraud = pd.read_parquet(raw_internal_path + "avg_fraud_rate_per_merchant.parquet")
+transactions = pd.read_csv(curated_data_path + "transactionss.csv")
+bnpl_earnings = pd.read_csv(curated_data_path + "BNPL_earnings.csv")
+revenue = pd.read_csv(curated_data_path + "revenue.csv")
+customers = pd.read_csv(curated_data_path + "customers.csv")
+tags = pd.read_csv(curated_data_path + "tagged_merchants.csv")
 
 # adjusting columns
 customers = customers[['merchant_name', 'total_future_customers']]
@@ -86,4 +100,4 @@ final_rank = final.sort_values(by='ranking_feature', ascending=False)
 final_rank = final_rank.head(100)
 final_rank = final_rank.reset_index(drop = True)
 
-final_rank.to_csv("../data/curated/final_rank.csv", index = True)
+final_rank.to_csv(curated_data_path + "final_rank.csv", index = True)

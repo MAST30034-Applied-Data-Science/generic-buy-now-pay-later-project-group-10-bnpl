@@ -1,6 +1,7 @@
 
 #==============================================================================
 import matplotlib.pyplot as plt
+import sys, json
 import outlier
 import pandas as pd
 import seaborn as sns
@@ -22,6 +23,19 @@ spark = (
     .config("spark.driver.memory", "10g")
     .getOrCreate()
 )
+#------------------------------------------------------------------------------
+# Define relative target directories
+
+paths_arg = sys.argv[1]
+
+with open(paths_arg) as json_paths: 
+    PATHS = json.load(json_paths)
+    json_paths.close()
+
+raw_internal_path = PATHS['raw_internal_data_path']
+curated_data_path = PATHS['curated_data_path']
+external_data_path = PATHS['external_data_path']
+visualisation_path = PATHS['visualisation_path']
 
 #------------------------------------------------------------------------------
 # Plot the total male and female transactions
@@ -33,7 +47,7 @@ sns.countplot(data=genderspd, x="gender")
 ax1.ticklabel_format(style='plain', axis='y')
 ax1.set_xlabel("Gender")
 ax1.set_title("Number of transactions per gender")
-plt.savefig("../plots/Gender transactions.jpg",dpi=300, bbox_inches='tight')
+plt.savefig(visualisation_path + "Gender transactions.jpg",dpi=300, bbox_inches='tight')
 
 #------------------------------------------------------------------------------
 # Distribution of total revenue for each merchant from online purchases
@@ -47,7 +61,7 @@ fig2, ax2 = plt.subplots(figsize=(12,7))
 sns.boxplot(total_revenue)
 ax2.set_xlabel("Total revenue per merchant")
 ax2.set_title("Distribution of merchant revenue")
-plt.savefig("../plots/Revenue distribution.jpg",dpi=300, bbox_inches='tight')
+plt.savefig(visualisation_path + "Revenue distribution.jpg",dpi=300, bbox_inches='tight')
 
 #------------------------------------------------------------------------------
 # Distributions of transactions by state
@@ -60,13 +74,13 @@ sns.countplot(data=statepd, x="state")
 ax3.ticklabel_format(style='plain', axis='y')
 ax3.set_xlabel("State")
 ax3.set_title("Number of transactions per Victorian state")
-plt.savefig("../plots/Transactions per state.jpg",dpi=300, bbox_inches='tight')
+plt.savefig(visualisation_path + "Transactions per state.jpg",dpi=300, bbox_inches='tight')
 
 #------------------------------------------------------------------------------
 # Number of transactions made per month
 
 # Read the tagged model
-tagged_merchants_sdf = spark.read.parquet("../data/curated/tagged_merchants.parquet")
+tagged_merchants_sdf = spark.read.parquet(curated_data_path + "tagged_merchants.parquet")
 
 # -----------------------------------------------------------------------------
 # Join the final dataset to the tagged model
@@ -149,7 +163,7 @@ sns.lineplot(data=trans_2021_df, x="Month", y="transactions_2021",
 hue="category")
 ax4.set_ylabel("Number of transactions in 2021")
 ax4.set_title("Number of transactions per category in 2021")
-plt.savefig("../plots/Transactions per category 2021.jpg",dpi=300, 
+plt.savefig(visualisation_path + "Transactions per category 2021.jpg",dpi=300, 
 bbox_inches='tight')
 
 
@@ -158,7 +172,7 @@ sns.lineplot(data=trans_2022_df, x="Month", y="transactions_2022",
 hue="category")
 ax5.set_ylabel("Number of transactions in 2022")
 ax5.set_title("Number of transactions per category in 2022")
-plt.savefig("../plots/Transactions per category 2022.jpg",dpi=300, 
+plt.savefig(visualisation_path + "Transactions per category 2022.jpg",dpi=300, 
 bbox_inches='tight')
 #------------------------------------------------------------------------------
 # Revenue per category in 2021 and 2022
@@ -215,7 +229,7 @@ hue="category")
 ax6.set_ylabel("Amount of revenue in 2021")
 ax6.ticklabel_format(style='plain', axis='y')
 ax6.set_title("Amount of revenue per category in 2021")
-plt.savefig("../plots/Revenue per category 2021.jpg",dpi=300, 
+plt.savefig(visualisation_path + "Revenue per category 2021.jpg",dpi=300, 
 bbox_inches='tight')
 
 fig7, ax7 = plt.subplots(figsize=(12,7))
@@ -224,7 +238,7 @@ hue="category")
 ax7.set_ylabel("Amount of revenue in 2022")
 ax7.ticklabel_format(style='plain', axis='y')
 ax7.set_title("Amount of revenue per category in 2021")
-plt.savefig("../plots/Revenue per category 2022.jpg",dpi=300, 
+plt.savefig(visualisation_path + "Revenue per category 2022.jpg",dpi=300, 
 bbox_inches='tight')
 
 #------------------------------------------------------------------------------
@@ -279,7 +293,7 @@ sns.lineplot(data=BNPL_2021_df, x="Month", y="BNPL_2021",
 hue="category")
 ax8.set_ylabel("BNPL earnings in $ in 2021")
 ax8.set_title("Amount of BNPL earnings in 2021")
-plt.savefig("../plots/Transactions per category 2021.jpg",dpi=300, 
+plt.savefig(visualisation_path + "Transactions per category 2021.jpg",dpi=300, 
 bbox_inches='tight')
 
 
@@ -288,7 +302,7 @@ sns.lineplot(data=BNPL_2022_df, x="Month", y="BNPL_2022",
 hue="category")
 ax9.set_ylabel("BNPL earnings in $ in 2022")
 ax9.set_title("Amount of BNPL earnings in 2022")
-plt.savefig("../plots/Transactions per category 2022.jpg",dpi=300, 
+plt.savefig(visualisation_path + "Transactions per category 2022.jpg",dpi=300, 
 bbox_inches='tight')
 
 
@@ -330,7 +344,7 @@ for index, row in num_transactions_by_postcode_pdf.iterrows():
           fill=True,
           fill_color=fill_color,
        ).add_to(m)
-m.save('../plots/bubble_plot_num_transactions_by_location.html')
+m.save(visualisation_path + "bubble_plot_num_transactions_by_location.html")
 
 #------------------------------------------------------------------------------
 ## The following was modified from MAST30034 Tutorial 2
@@ -364,7 +378,7 @@ c = folium.Choropleth(
     legend_name='Total consumer fraud probability by SA2 region'
 )
 c.add_to(consumer_fraud_map)
-consumer_fraud_map.save('../plots/consumer_fraud_map.html')
+consumer_fraud_map.save(visualisation_path + "consumer_fraud_map.html")
 ### Locations of fraudulent merchants
 # aggregate data by postcode and merchant fraud probability
 merchant_fraud_postcodes = fraud_feature.model_with_fraud.select('postcodes', 'SA2_code', 'fraud_probability_merchant')
@@ -391,7 +405,7 @@ d = folium.Choropleth(
     legend_name='Total merchant fraud probability by SA2 region'
 )
 d.add_to(merchant_fraud_map)
-merchant_fraud_map.save('../plots/merchant_fraud_map.html')
+merchant_fraud_map.save(visualisation_path + "merchant_fraud_map.html")
 
 
 

@@ -1,16 +1,33 @@
 import pandas as pd
+import sys, json
 
-BNPL_metrics = pd.read_csv("../data/curated/BNPL_metrics.csv")
-BNPL_features = pd.read_csv("../data/curated/BNPL_features.csv")
+#------------------------------------------------------------------------------
+# Define relative target directories
 
-customer_metrics = pd.read_csv("../data/curated/customer_metrics.csv")
-customer_features = pd.read_csv("../data/curated/customer_features.csv")
+paths_arg = sys.argv[1]
 
-revenue_metrics = pd.read_csv("../data/curated/revenue_metrics.csv")
-revenue_features = pd.read_csv("../data/curated/revenue_features.csv")
+with open(paths_arg) as json_paths: 
+    PATHS = json.load(json_paths)
+    json_paths.close()
 
-transactions_metrics = pd.read_csv("../data/curated/transactions_metrics.csv")
-transactions_features = pd.read_csv("../data/curated/transactions_features.csv")
+raw_internal_path = PATHS['raw_internal_data_path']
+curated_data_path = PATHS['curated_data_path']
+external_data_path = PATHS['external_data_path']
+
+#------------------------------------------------------------------------------
+# Retreive model metrics
+
+BNPL_metrics = pd.read_csv(curated_data_path + "BNPL_metrics.csv")
+BNPL_features = pd.read_csv(curated_data_path + "BNPL_features.csv")
+
+customer_metrics = pd.read_csv(curated_data_path + "customer_metrics.csv")
+customer_features = pd.read_csv(curated_data_path + "customer_features.csv")
+
+revenue_metrics = pd.read_csv(curated_data_path + "revenue_metrics.csv")
+revenue_features = pd.read_csv(curated_data_path + "revenue_features.csv")
+
+transactions_metrics = pd.read_csv(curated_data_path + "transactions_metrics.csv")
+transactions_features = pd.read_csv(curated_data_path + "transactions_features.csv")
 
 metrics = {
     'Model name': ['Predicted BNPL earnings', 'Predicted no. of Customers', 
