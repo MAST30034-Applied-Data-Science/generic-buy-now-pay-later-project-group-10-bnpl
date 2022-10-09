@@ -228,6 +228,71 @@ plt.savefig("../plots/Revenue per category 2022.jpg",dpi=300,
 bbox_inches='tight')
 
 #------------------------------------------------------------------------------
+# Calculate the total BNPL earnings
+transactions_new_sdf.createOrReplaceTempView("temp_view")
+
+BNPL_2021 = spark.sql(""" 
+
+SELECT Month, category, SUM((take_rate/100)*dollar_value) as BNPL_2021
+FROM temp_view
+WHERE Year == '2021'
+GROUP BY Month, category
+
+""")
+
+BNPL_2022 = spark.sql(""" 
+
+SELECT Month, category, SUM((take_rate/100)*dollar_value) as BNPL_2022
+FROM temp_view
+WHERE Year == '2022'
+GROUP BY Month, category
+
+""")
+
+
+BNPL_2021_df = BNPL_2021.toPandas()
+BNPL_2022_df = BNPL_2022.toPandas()
+
+
+month_2021 = ['February', 'March', 'April', 'May', 'June', 'July', 'August', 
+'September', 'October', 'November','December']
+month_2022 = ['Janaury', 'February', 'March', 'April', 'May', 'June', 'July', 
+'August', 'September']
+
+
+
+# Order the month column 
+
+
+BNPL_2021_df['Month'] = pd.Categorical(BNPL_2021_df['Month'], 
+categories = month_2021, ordered=True)
+BNPL_2021_df.sort_values(by = "Month", inplace = True)
+
+BNPL_2022_df['Month'] = pd.Categorical(BNPL_2022_df['Month'], 
+categories = month_2022, ordered=True)
+BNPL_2022_df.sort_values(by = "Month", inplace = True)
+
+
+
+fig8, ax8 = plt.subplots(figsize=(12,7))
+sns.lineplot(data=BNPL_2021_df, x="Month", y="BNPL_2021", 
+hue="category")
+ax8.set_ylabel("BNPL earnings in $ in 2021")
+ax8.set_title("Amount of BNPL earnings in 2021")
+plt.savefig("../plots/Transactions per category 2021.jpg",dpi=300, 
+bbox_inches='tight')
+
+
+fig9, ax9 = plt.subplots(figsize=(12,7))
+sns.lineplot(data=BNPL_2022_df, x="Month", y="BNPL_2022", 
+hue="category")
+ax9.set_ylabel("BNPL earnings in $ in 2022")
+ax9.set_title("Amount of BNPL earnings in 2022")
+plt.savefig("../plots/Transactions per category 2022.jpg",dpi=300, 
+bbox_inches='tight')
+
+
+#------------------------------------------------------------------------------
 # Geospatial visualizations of number of transactions by post code
 num_transactions_by_postcode = ETL.final_join3.groupBy(['postcodes', 'suburb', 'long', 'lat']).count()
 # conver transactions location to pandas df

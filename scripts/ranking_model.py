@@ -2,6 +2,7 @@
 # Importing required libraries
 import sys
 import pandas as pd
+# 2 3 5 4 1
 
 #------------------------------------------------------------------------------
 # take list of values as weights for fraud, transactions, revenue, customer, 
@@ -12,7 +13,7 @@ weights = list(sys.argv[1].split(','))
 # READING IN DATA
 #==============================================================================
 fraud = pd.read_parquet("../data/tables/avg_fraud_rate_per_merchant.parquet")
-transactions = pd.read_csv("../data/curated/no_cust_ranking_feature.csv")
+transactions = pd.read_csv("../data/curated/transactionss.csv")
 bnpl_earnings = pd.read_csv("../data/curated/BNPL_earnings.csv")
 revenue = pd.read_csv("../data/curated/revenue.csv")
 customers = pd.read_csv("../data/curated/customers.csv")
@@ -23,10 +24,10 @@ customers = customers[['merchant_name', 'total_future_customers']]
 revenue = revenue[['merchant_name', 'total_revenue']]
 tags = tags[['name', 'merchant_abn', 'category']]
 tags = tags.rename(columns={'name': 'merchant_name'})
-transactions = transactions.rename(columns={'prediction': 'total_future_transactions'})
+#transactions = transactions.rename(columns={'total_future_transactionss': 'total_future_transactions'})
 
 
-tags_trans = pd.merge(tags, transactions, on=['merchant_abn','merchant_name'],
+tags_trans = pd.merge(tags, transactions, on=['merchant_name'],
 how='inner')
 add_customers = pd.merge(tags_trans, customers, on ='merchant_name', 
 how='inner')
@@ -43,7 +44,7 @@ final = pd.merge(add_bnpl, fraud, on ='merchant_abn', how='inner')
 normalised = final.copy()
 
 for feature in ['total_future_customers', 'total_revenue', 'total_earnings_of_BNPL',
-               'total_future_transactions', 'average_fraud_rate_per_merchant']:
+               'total_future_transactionss', 'average_fraud_rate_per_merchant']:
     normalised[feature] = (normalised[feature] - normalised[feature].min()) \
                         / (normalised[feature].max() - normalised[feature].min())    
 
@@ -56,7 +57,7 @@ revenue_weights = int(weights[2])
 customer_weights = int(weights[3])
 bnpl_weights = int(weights[4])
 
-normalised['ranking_feature'] = transactions_weights*normalised['total_future_transactions'] + \
+normalised['ranking_feature'] = transactions_weights*normalised['total_future_transactionss'] + \
                                 revenue_weights*normalised['total_revenue'] + \
                                 customer_weights*normalised['total_future_customers'] + \
                                 bnpl_weights*normalised['total_earnings_of_BNPL'] + \
