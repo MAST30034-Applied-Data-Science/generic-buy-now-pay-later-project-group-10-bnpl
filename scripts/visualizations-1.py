@@ -237,7 +237,7 @@ sns.lineplot(data=revenue_2022_df, x="Month", y="revenue_2022",
 hue="category")
 ax7.set_ylabel("Amount of revenue in 2022")
 ax7.ticklabel_format(style='plain', axis='y')
-ax7.set_title("Amount of revenue per category in 2021")
+ax7.set_title("Amount of revenue per category in 2022")
 plt.savefig(visualisation_path + "Revenue per category 2022.jpg",dpi=300, 
 bbox_inches='tight')
 
