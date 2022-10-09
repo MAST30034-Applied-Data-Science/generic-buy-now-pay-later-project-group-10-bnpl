@@ -53,8 +53,9 @@ dtm = cv.fit_transform(merchants_df['cleaned_tags'])
 
 # -----------------------------------------------------------------------------
 # Set the 5 categories to be identified
-categories_label = ["fashion", "furniture", "electronics", 
-"Beauty, health, personal and household", "toys, hobbies and DIY"]
+categories_label = ['Furniture', 'Toys and DIY', 
+'Beauty, Health, Personal and Household', 'Books, Stationary and Music',
+'Electronics' ]
 
 # -----------------------------------------------------------------------------
 # Fit the LDA model to the vectorized data
